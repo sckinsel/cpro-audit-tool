@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CP RO Gross Margin Audit - Covert Ford 2025</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+            color: #1a1a2e;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 25px;
+        }
+
+        /* Rate Input Section */
+        .rate-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .rate-section label {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .rate-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rate-input-group span { font-size: 1.3em; font-weight: 600; }
+        #roRate {
+            font-size: 1.3em;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 100px;
+            text-align: center;
+            font-weight: 600;
+        }
+        #roRate:focus { outline: none; border-color: #2563eb; }
+        .rate-hint {
+            color: #888;
+            font-size: 0.85em;
+        }
+        .breakeven-note {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 0.9em;
+            color: #92400e;
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card-label {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .card-value {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+        .card-sub {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 4px;
+        }
+        .card-green .card-value { color: #059669; }
+        .card-red .card-value { color: #dc2626; }
+        .card-blue .card-value { color: #2563eb; }
+        .card-amber .card-value { color: #d97706; }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .view-toggle button {
+            padding: 10px 24px;
+            border: 2px solid #ddd;
+            background: #fff;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .view-toggle button.active {
+            background: #1a1a2e;
+            color: #fff;
+            border-color: #1a1a2e;
+        }
+        .view-toggle button:hover:not(.active) {
+            border-color: #999;
+        }
+
+        /* Table */
+        .table-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92em;
+        }
+        thead th {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 14px 16px;
+            text-align: right;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        thead th:first-child { text-align: left; border-radius: 12px 0 0 0; }
+        thead th:last-child { border-radius: 0 12px 0 0; }
+        tbody td {
+            padding: 12px 16px;
+            text-align: right;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        tbody td:first-child {
+            text-align: left;
+            font-weight: 600;
+        }
+        tbody tr:hover { background: #f8f9ff; }
+        tbody tr.total-row {
+            background: #f0f4ff;
+            font-weight: 700;
+        }
+        tbody tr.total-row td { border-top: 2px solid #1a1a2e; }
+
+        .rebate-positive {
+            color: #dc2626;
+            font-weight: 700;
+        }
+        .rebate-zero {
+            color: #059669;
+            font-weight: 600;
+        }
+        .margin-over {
+            background: #fef2f2;
+            color: #dc2626;
+            font-weight: 700;
+            border-radius: 4px;
+            padding: 2px 6px;
+        }
+        .margin-under {
+            color: #059669;
+        }
+        .margin-at {
+            color: #d97706;
+        }
+
+        /* Chart */
+        .chart-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .chart-section h2 {
+            font-size: 1.1em;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            padding: 0 10px 30px 50px;
+        }
+        .chart-bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .chart-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            width: 100%;
+            justify-content: center;
+        }
+        .chart-bar {
+            width: 45%;
+            max-width: 40px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.4s ease;
+            position: relative;
+        }
+        .chart-bar.cost { background: #ef4444; }
+        .chart-bar.revenue { background: #22c55e; }
+        .chart-bar:hover { opacity: 0.8; }
+        .chart-label {
+            font-size: 0.7em;
+            color: #888;
+            margin-top: 8px;
+            text-align: center;
+        }
+        .chart-y-axis {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 30px;
+            width: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-right: 8px;
+        }
+        .chart-y-label {
+            font-size: 0.7em;
+            color: #999;
+        }
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        .margin-line {
+            position: absolute;
+            left: 50px;
+            right: 10px;
+            border-top: 2px dashed #f59e0b;
+            z-index: 1;
+        }
+        .margin-line-label {
+            position: absolute;
+            right: 0;
+            top: -18px;
+            font-size: 0.7em;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        /* Top Items */
+        .top-items {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .top-items h2 {
+            font-size: 1.1em;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        .item-bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 10px;
+        }
+        .item-rank {
+            font-size: 0.8em;
+            color: #999;
+            width: 20px;
+            text-align: right;
+        }
+        .item-name {
+            width: 280px;
+            font-size: 0.82em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .item-bar-container {
+            flex: 1;
+            height: 22px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .item-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .item-cost {
+            font-size: 0.85em;
+            font-weight: 600;
+            width: 80px;
+            text-align: right;
+        }
+
+        /* Print */
+        @media print {
+            body { background: #fff; padding: 10px; }
+            .rate-section, .view-toggle { break-inside: avoid; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+            .table-container { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CP RO Gross Margin Audit</h1>
+        <p class="subtitle">Covert Ford &mdash; January 2025 through December 2025 &mdash; Ancillary Shop Supplies Program</p>
+
+        <div class="rate-section">
+            <div>
+                <label>Charge Per CP RO:</label>
+                <div class="rate-input-group">
+                    <span>$</span>
+                    <input type="number" id="roRate" value="7.09" step="0.25" min="0">
+                    <span>/ RO</span>
+                </div>
+                <div class="rate-hint">Change this rate to see how margins and rebates adjust</div>
+            </div>
+            <div class="breakeven-note" id="breakevenNote">
+                50% margin breakeven rate for this account: <strong>$7.09 / RO</strong>
+            </div>
+        </div>
+
+        <div class="summary-cards" id="summaryCards"></div>
+
+        <div class="view-toggle">
+            <button class="active" onclick="setView('monthly')">Monthly View</button>
+            <button onclick="setView('quarterly')">Quarterly View</button>
+            <button onclick="setView('annual')">Annual Summary</button>
+        </div>
+
+        <div class="table-container">
+            <table id="auditTable"></table>
+        </div>
+
+        <div class="chart-section">
+            <h2>Cost vs Revenue by Period</h2>
+            <div class="chart-container" id="chartContainer"></div>
+            <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Cost of Goods</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Revenue (CP RO x Rate)</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> 50% Margin Line</div>
+            </div>
+        </div>
+
+        <div class="top-items" id="topItemsSection">
+            <h2>Top 15 Items by Annual Cost</h2>
+            <div id="topItemsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+    // ===== DATA FROM SPREADSHEET =====
+    const monthlyData = [
+        { month: 'Jan 2025', cost: 5931.92089, qty: 4187, ros: 1267, quarter: 'Q1' },
+        { month: 'Feb 2025', cost: 3732.21739, qty: 1857, ros: 1295, quarter: 'Q1' },
+        { month: 'Mar 2025', cost: 5439.38564, qty: 1387, ros: 1404, quarter: 'Q1' },
+        { month: 'Apr 2025', cost: 3808.66862, qty: 1900, ros: 1356, quarter: 'Q2' },
+        { month: 'May 2025', cost: 5622.34741, qty: 1599, ros: 1402, quarter: 'Q2' },
+        { month: 'Jun 2025', cost: 4065.96941, qty: 1100, ros: 1433, quarter: 'Q2' },
+        { month: 'Jul 2025', cost: 5685.91136, qty: 3775, ros: 1530, quarter: 'Q3' },
+        { month: 'Aug 2025', cost: 5060.25925, qty: 2437, ros: 1384, quarter: 'Q3' },
+        { month: 'Sep 2025', cost: 3910.71322, qty: 1658, ros: 1338, quarter: 'Q3' },
+        { month: 'Oct 2025', cost: 7265.55542, qty: 2866, ros: 1494, quarter: 'Q4' },
+        { month: 'Nov 2025', cost: 3142.27225, qty: 1345, ros: 1339, quarter: 'Q4' },
+        { month: 'Dec 2025', cost: 5232.61343, qty: 3719, ros: 1376, quarter: 'Q4' },
+    ];
+
+    // Top items by annual cost (from spreadsheet)
+    const topItems = [
+        { code: 'MC013B', desc: 'SELECT BRAKE AND PARTS CLEANER, 55GAL', cost: 12765.00 },
+        { code: 'MC518', desc: "EMMOTION WHT HI CAPACITY ROLL TOWEL 6/600'", cost: 5842.30 },
+        { code: 'MCMSUS160-2.5', desc: 'SUPER S DIESEL EXHAUST FLUID, 2.5 GALLON', cost: 5544.00 },
+        { code: 'MC2167', desc: 'DISTILLED WATER, 1 GAL.', cost: 2299.70 },
+        { code: 'MCJ385815K', desc: 'CAN LINER, 38 X 58, BLK 1.5MIL 5/20', cost: 2105.35 },
+        { code: 'MC254', desc: 'SEAT COVER, SLIP N GRIP, 500ROLL', cost: 1922.80 },
+        { code: 'MC213', desc: 'ROLL, SORBENT, 30" X 150FT', cost: 1481.76 },
+        { code: 'MCJ3339XHW', desc: 'CAN LINER, 33 X 39, WHITE, .8 MIL 250/CS', cost: 1419.56 },
+        { code: 'MCMWHTK1000', desc: 'HEAVY DUTY KEY TAG, RULED, WHITE, 500 PK', cost: 1404.00 },
+        { code: 'MCJ2432XHW', desc: 'CAN LINER, 24 X 32 XH-DUTY .50MIL, WHTE 10/50', cost: 1210.79 },
+        { code: 'MCMGRNK1000', desc: 'HEAVY DUTY KEY TAG, RULED, GREEN, 500 PK', cost: 1014.00 },
+        { code: 'MCJ8600', desc: 'U FLOOR MAT URINAL, UNIGARD 6/CS', cost: 1005.04 },
+        { code: 'MC1989', desc: 'OIL CHANGE PRINTER, KEYBOARD, COVER, RIBBON', cost: 990.00 },
+        { code: 'MC202', desc: 'HOSE REEL, AUTO, 50FT, 3/8" HOSE', cost: 845.85 },
+        { code: 'MCJ2018595', desc: 'E2 ANTIBACTERIAL FOAM SOAP, 1100ML - 1EA', cost: 845.73 },
+    ];
+
+    let currentView = 'monthly';
+
+    function getRate() {
+        return parseFloat(document.getElementById('roRate').value) || 0;
+    }
+
+    function fmt(n) {
+        return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtPct(n) {
+        return n.toFixed(1) + '%';
+    }
+
+    function getQuarterlyData() {
+        const quarters = {};
+        monthlyData.forEach(m => {
+            if (!quarters[m.quarter]) {
+                quarters[m.quarter] = { period: m.quarter, cost: 0, qty: 0, ros: 0, months: [] };
+            }
+            quarters[m.quarter].cost += m.cost;
+            quarters[m.quarter].qty += m.qty;
+            quarters[m.quarter].ros += m.ros;
+            quarters[m.quarter].months.push(m.month);
+        });
+        return Object.values(quarters);
+    }
+
+    function getAnnualData() {
+        const total = { period: 'Full Year 2025', cost: 0, qty: 0, ros: 0 };
+        monthlyData.forEach(m => {
+            total.cost += m.cost;
+            total.qty += m.qty;
+            total.ros += m.ros;
+        });
+        return [total];
+    }
+
+    function getDisplayData() {
+        if (currentView === 'monthly') return monthlyData.map(m => ({ period: m.month, ...m }));
+        if (currentView === 'quarterly') return getQuarterlyData();
+        return getAnnualData();
+    }
+
+    function calcRow(d, rate) {
+        const revenue = d.ros * rate;
+        const grossProfit = revenue - d.cost;
+        const margin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+        const targetRevenue = d.cost / 0.50;  // revenue needed for exactly 50%
+        const rebate = margin > 50 ? revenue - targetRevenue : 0;
+        return { ...d, revenue, grossProfit, margin, rebate };
+    }
+
+    function renderSummaryCards() {
+        const rate = getRate();
+        const annual = getAnnualData()[0];
+        const r = calcRow(annual, rate);
+
+        const totalRebate = getDisplayData().reduce((sum, d) => {
+            const row = calcRow(d, rate);
+            return sum + row.rebate;
+        }, 0);
+
+        let html = '';
+
+        html += `<div class="card card-blue">
+            <div class="card-label">Annual Revenue</div>
+            <div class="card-value">${fmt(r.revenue)}</div>
+            <div class="card-sub">${r.ros.toLocaleString()} ROs x ${fmt(rate)}</div>
+        </div>`;
+
+        html += `<div class="card">
+            <div class="card-label">Annual Cost of Goods</div>
+            <div class="card-value">${fmt(r.cost)}</div>
+            <div class="card-sub">${r.qty.toLocaleString()} items shipped</div>
+        </div>`;
+
+        const marginClass = r.margin > 50 ? 'card-red' : r.margin >= 48 ? 'card-amber' : 'card-green';
+        html += `<div class="card ${marginClass}">
+            <div class="card-label">Annual Gross Margin</div>
+            <div class="card-value">${fmtPct(r.margin)}</div>
+            <div class="card-sub">Gross Profit: ${fmt(r.grossProfit)}</div>
+        </div>`;
+
+        const rebateClass = totalRebate > 0 ? 'card-red' : 'card-green';
+        html += `<div class="card ${rebateClass}">
+            <div class="card-label">Total Rebate Owed (${currentView})</div>
+            <div class="card-value">${totalRebate > 0 ? fmt(totalRebate) : '$0.00'}</div>
+            <div class="card-sub">${totalRebate > 0 ? 'Amount over 50% margin to return' : 'No rebate — margin at or below 50%'}</div>
+        </div>`;
+
+        document.getElementById('summaryCards').innerHTML = html;
+    }
+
+    function renderTable() {
+        const rate = getRate();
+        const data = getDisplayData();
+
+        let html = '<thead><tr>';
+        html += '<th>Period</th><th>CP ROs</th><th>Cost of Goods</th><th>Revenue</th>';
+        html += '<th>Gross Profit</th><th>Gross Margin</th><th>Rebate Owed</th>';
+        html += '</tr></thead><tbody>';
+
+        let totals = { ros: 0, cost: 0, revenue: 0, grossProfit: 0, rebate: 0 };
+
+        data.forEach(d => {
+            const r = calcRow(d, rate);
+            totals.ros += r.ros;
+            totals.cost += r.cost;
+            totals.revenue += r.revenue;
+            totals.grossProfit += r.grossProfit;
+            totals.rebate += r.rebate;
+
+            const marginClass = r.margin > 50 ? 'margin-over' : r.margin >= 48 ? 'margin-at' : 'margin-under';
+            const rebateClass = r.rebate > 0 ? 'rebate-positive' : 'rebate-zero';
+
+            html += '<tr>';
+            html += `<td>${r.period}</td>`;
+            html += `<td>${r.ros.toLocaleString()}</td>`;
+            html += `<td>${fmt(r.cost)}</td>`;
+            html += `<td>${fmt(r.revenue)}</td>`;
+            html += `<td>${fmt(r.grossProfit)}</td>`;
+            html += `<td><span class="${marginClass}">${fmtPct(r.margin)}</span></td>`;
+            html += `<td class="${rebateClass}">${r.rebate > 0 ? fmt(r.rebate) : '$0.00'}</td>`;
+            html += '</tr>';
+        });
+
+        if (data.length > 1) {
+            const totalMargin = totals.revenue > 0 ? (totals.grossProfit / totals.revenue) * 100 : 0;
+            const marginClass = totalMargin > 50 ? 'margin-over' : totalMargin >= 48 ? 'margin-at' : 'margin-under';
+            html += '<tr class="total-row">';
+            html += `<td>TOTAL</td>`;
+            html += `<td>${totals.ros.toLocaleString()}</td>`;
+            html += `<td>${fmt(totals.cost)}</td>`;
+            html += `<td>${fmt(totals.revenue)}</td>`;
+            html += `<td>${fmt(totals.grossProfit)}</td>`;
+            html += `<td><span class="${marginClass}">${fmtPct(totalMargin)}</span></td>`;
+            html += `<td class="${totals.rebate > 0 ? 'rebate-positive' : 'rebate-zero'}">${totals.rebate > 0 ? fmt(totals.rebate) : '$0.00'}</td>`;
+            html += '</tr>';
+        }
+
+        html += '</tbody>';
+        document.getElementById('auditTable').innerHTML = html;
+    }
+
+    function renderChart() {
+        const rate = getRate();
+        const data = getDisplayData();
+        const container = document.getElementById('chartContainer');
+
+        const rows = data.map(d => calcRow(d, rate));
+        const maxVal = Math.max(...rows.map(r => Math.max(r.cost, r.revenue))) * 1.1;
+
+        let html = '';
+
+        // Y-axis
+        html += '<div class="chart-y-axis">';
+        for (let i = 4; i >= 0; i--) {
+            const val = (maxVal / 4) * i;
+            html += `<div class="chart-y-label">$${(val/1000).toFixed(1)}k</div>`;
+        }
+        html += '</div>';
+
+        // 50% margin line: at what height? For 50% margin, revenue = 2 * cost
+        // The line represents where revenue would equal 2x cost...
+        // Actually let's show it as a reference on cost bars: the "target" revenue = cost * 2
+
+        rows.forEach(r => {
+            const costHeight = (r.cost / maxVal) * 260;
+            const revHeight = (r.revenue / maxVal) * 260;
+            const label = currentView === 'monthly' ? r.period.replace(' 2025', '').substring(0, 3) : r.period;
+
+            html += `<div class="chart-bar-group">
+                <div class="chart-bars">
+                    <div class="chart-bar cost" style="height:${costHeight}px" title="Cost: ${fmt(r.cost)}"></div>
+                    <div class="chart-bar revenue" style="height:${revHeight}px" title="Revenue: ${fmt(r.revenue)}"></div>
+                </div>
+                <div class="chart-label">${label}</div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function renderTopItems() {
+        const maxCost = topItems[0].cost;
+        let html = '';
+        topItems.forEach((item, i) => {
+            const pct = (item.cost / maxCost) * 100;
+            html += `<div class="item-bar-row">
+                <div class="item-rank">${i + 1}</div>
+                <div class="item-name" title="${item.desc}">${item.desc}</div>
+                <div class="item-bar-container">
+                    <div class="item-bar-fill" style="width:${pct}%"></div>
+                </div>
+                <div class="item-cost">${fmt(item.cost)}</div>
+            </div>`;
+        });
+        document.getElementById('topItemsContainer').innerHTML = html;
+    }
+
+    function renderAll() {
+        renderSummaryCards();
+        renderTable();
+        renderChart();
+    }
+
+    function setView(view) {
+        currentView = view;
+        document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        renderAll();
+    }
+
+    document.getElementById('roRate').addEventListener('input', renderAll);
+
+    // Initial render
+    renderAll();
+    renderTopItems();
+    </script>
+</body>
+</html>
