@@ -279,6 +279,7 @@
             align-items: flex-end;
             width: 100%;
             justify-content: center;
+            position: relative;
         }
         .chart-bar {
             width: 45%;
@@ -332,18 +333,11 @@
         }
         .margin-line {
             position: absolute;
-            left: 50px;
-            right: 10px;
-            border-top: 2px dashed #f59e0b;
-            z-index: 1;
-        }
-        .margin-line-label {
-            position: absolute;
+            left: 0;
             right: 0;
-            top: -18px;
-            font-size: 0.7em;
-            color: #f59e0b;
-            font-weight: 600;
+            border-top: 2px dashed #f59e0b;
+            z-index: 2;
+            pointer-events: none;
         }
 
         /* Top Items */
@@ -812,25 +806,17 @@
         }
         html += '</div>';
 
-        // 50% margin line: average target revenue across all periods
-        // For 50% margin, revenue = 2 × cost
-        if (rows.length > 0) {
-            const avgTargetRevenue = rows.reduce((sum, r) => sum + r.cost * 2, 0) / rows.length;
-            const lineHeight = (avgTargetRevenue / maxVal) * 260;
-            html += `<div class="margin-line" style="bottom:${30 + lineHeight}px">
-                <div class="margin-line-label">50% Margin</div>
-            </div>`;
-        }
-
         rows.forEach(r => {
             const costHeight = (r.cost / maxVal) * 260;
             const revHeight = (r.revenue / maxVal) * 260;
+            const targetHeight = (r.cost * 2 / maxVal) * 260; // 50% margin = revenue needs to be 2× cost
             const label = currentView === 'monthly' ? r.period.replace(' 2025', '').substring(0, 3) : r.period;
 
             html += `<div class="chart-bar-group">
                 <div class="chart-bars">
                     <div class="chart-bar cost" style="height:${costHeight}px" title="Cost: ${fmt(r.cost)}"></div>
                     <div class="chart-bar revenue" style="height:${revHeight}px" title="Revenue: ${fmt(r.revenue)}"></div>
+                    <div class="margin-line" style="bottom:${targetHeight}px" title="50% Margin Target: ${fmt(r.cost * 2)}"></div>
                 </div>
                 <div class="chart-label">${label}</div>
             </div>`;
