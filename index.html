@@ -812,9 +812,15 @@
         }
         html += '</div>';
 
-        // 50% margin line: at what height? For 50% margin, revenue = 2 * cost
-        // The line represents where revenue would equal 2x cost...
-        // Actually let's show it as a reference on cost bars: the "target" revenue = cost * 2
+        // 50% margin line: average target revenue across all periods
+        // For 50% margin, revenue = 2 × cost
+        if (rows.length > 0) {
+            const avgTargetRevenue = rows.reduce((sum, r) => sum + r.cost * 2, 0) / rows.length;
+            const lineHeight = (avgTargetRevenue / maxVal) * 260;
+            html += `<div class="margin-line" style="bottom:${30 + lineHeight}px">
+                <div class="margin-line-label">50% Margin</div>
+            </div>`;
+        }
 
         rows.forEach(r => {
             const costHeight = (r.cost / maxVal) * 260;
