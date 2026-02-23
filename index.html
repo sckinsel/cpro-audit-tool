@@ -14,6 +14,21 @@
         }
         .container { max-width: 1400px; margin: 0 auto; }
 
+        .logo-bar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-bar img {
+            max-height: 60px;
+            width: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
         h1 {
             font-size: 1.8em;
             margin-bottom: 5px;
@@ -22,7 +37,26 @@
         .subtitle {
             color: #666;
             font-size: 0.95em;
-            margin-bottom: 25px;
+        }
+        .new-customer-btn {
+            padding: 10px 22px;
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .new-customer-btn:hover { background: #2d2d4e; }
+        .new-customer-btn svg {
+            width: 18px;
+            height: 18px;
         }
 
         /* Rate Input Section */
@@ -343,19 +377,141 @@
             text-align: right;
         }
 
+        /* Import Modal */
+        .import-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .import-overlay.active { display: flex; }
+        .import-modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            width: 520px;
+            max-width: 90vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .import-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .import-modal-header h2 {
+            font-size: 1.2em;
+            color: #1a1a2e;
+        }
+        .import-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #888;
+            cursor: pointer;
+            padding: 4px 8px;
+            line-height: 1;
+            border-radius: 6px;
+        }
+        .import-close-btn:hover { background: #f0f0f0; color: #333; }
+        .import-drop-zone {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .import-drop-zone.drag-over {
+            border-color: #2563eb;
+            background: #f0f4ff;
+        }
+        .drop-zone-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        .drop-zone-content a {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .drop-zone-formats {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+        .upload-icon {
+            width: 36px;
+            height: 36px;
+            color: #aaa;
+        }
+        .import-feedback {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        .import-feedback.success {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            color: #166534;
+        }
+        .import-feedback.error {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .import-feedback.warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .import-status {
+            font-size: 0.82em;
+            color: #059669;
+            font-weight: 500;
+            margin-top: 6px;
+        }
+
         /* Print */
         @media print {
             body { background: #fff; padding: 10px; }
             .rate-section, .view-toggle { break-inside: avoid; }
             .card { box-shadow: none; border: 1px solid #ddd; }
             .table-container { box-shadow: none; border: 1px solid #ddd; }
+            .new-customer-btn { display: none; }
+            .import-overlay { display: none !important; }
         }
     </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>CP RO Gross Margin Audit</h1>
-        <p class="subtitle">Covert Ford &mdash; January 2025 through December 2025 &mdash; Ancillary Shop Supplies Program</p>
+        <div class="logo-bar">
+            <img src="logo.png" alt="Perrone Automotive">
+        </div>
+        <div class="page-header">
+            <div>
+                <h1>CP RO Gross Margin Audit</h1>
+                <p class="subtitle">Covert Ford &mdash; January 2025 through December 2025 &mdash; Ancillary Shop Supplies Program</p>
+                <div class="import-status" id="importStatus"></div>
+            </div>
+            <button class="new-customer-btn" id="newCustomerBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                New Customer
+            </button>
+        </div>
 
         <div class="rate-section">
             <div>
@@ -373,6 +529,29 @@
         </div>
 
         <div class="summary-cards" id="summaryCards"></div>
+
+    <!-- Import Modal -->
+    <div class="import-overlay" id="importOverlay">
+        <div class="import-modal">
+            <div class="import-modal-header">
+                <h2>Import Customer Data</h2>
+                <button class="import-close-btn" id="importCloseBtn">&times;</button>
+            </div>
+            <div class="import-drop-zone" id="dropZone">
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden>
+                <div class="drop-zone-content">
+                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <span>Drop file here or <a href="#" id="browseLink">browse</a></span>
+                    <span class="drop-zone-formats">Supports CSV, XLSX, XLS</span>
+                </div>
+            </div>
+            <div class="import-feedback" id="importFeedback" style="display:none;"></div>
+        </div>
+    </div>
 
         <div class="view-toggle">
             <button class="active" onclick="setView('monthly')">Monthly View</button>
@@ -402,7 +581,7 @@
 
     <script>
     // ===== DATA FROM SPREADSHEET =====
-    const monthlyData = [
+    const DEFAULT_MONTHLY_DATA = [
         { month: 'Jan 2025', cost: 5931.92089, qty: 4187, ros: 1267, quarter: 'Q1' },
         { month: 'Feb 2025', cost: 3732.21739, qty: 1857, ros: 1295, quarter: 'Q1' },
         { month: 'Mar 2025', cost: 5439.38564, qty: 1387, ros: 1404, quarter: 'Q1' },
@@ -418,7 +597,7 @@
     ];
 
     // Top items by annual cost (from spreadsheet)
-    const topItems = [
+    const DEFAULT_TOP_ITEMS = [
         { code: 'MC013B', desc: 'SELECT BRAKE AND PARTS CLEANER, 55GAL', cost: 12765.00 },
         { code: 'MC518', desc: "EMMOTION WHT HI CAPACITY ROLL TOWEL 6/600'", cost: 5842.30 },
         { code: 'MCMSUS160-2.5', desc: 'SUPER S DIESEL EXHAUST FLUID, 2.5 GALLON', cost: 5544.00 },
@@ -435,6 +614,10 @@
         { code: 'MC202', desc: 'HOSE REEL, AUTO, 50FT, 3/8" HOSE', cost: 845.85 },
         { code: 'MCJ2018595', desc: 'E2 ANTIBACTERIAL FOAM SOAP, 1100ML - 1EA', cost: 845.73 },
     ];
+
+    // Mutable data arrays (replaced on file import)
+    let monthlyData = DEFAULT_MONTHLY_DATA.map(d => ({...d}));
+    let topItems = DEFAULT_TOP_ITEMS.map(d => ({...d}));
 
     let currentView = 'monthly';
 
@@ -621,6 +804,10 @@
     }
 
     function renderTopItems() {
+        if (!topItems.length) {
+            document.getElementById('topItemsContainer').innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No items data loaded.</p>';
+            return;
+        }
         const maxCost = topItems[0].cost;
         let html = '';
         topItems.forEach((item, i) => {
@@ -637,10 +824,20 @@
         document.getElementById('topItemsContainer').innerHTML = html;
     }
 
+    function updateBreakevenNote() {
+        const totalCost = monthlyData.reduce((s, m) => s + m.cost, 0);
+        const totalROs = monthlyData.reduce((s, m) => s + m.ros, 0);
+        const breakevenRate = totalROs > 0 ? (totalCost / 0.50) / totalROs : 0;
+        document.getElementById('breakevenNote').innerHTML =
+            '50% margin breakeven rate for this account: <strong>' + fmt(breakevenRate) + ' / RO</strong>';
+    }
+
     function renderAll() {
         renderSummaryCards();
         renderTable();
         renderChart();
+        renderTopItems();
+        updateBreakevenNote();
     }
 
     function setView(view) {
@@ -652,9 +849,574 @@
 
     document.getElementById('roRate').addEventListener('input', renderAll);
 
+    // ===== FILE IMPORT: AUTO-DETECTION PATTERNS =====
+    const MONTHLY_FIELD_PATTERNS = {
+        month: {
+            patterns: ['month', 'period', 'date', 'mo', 'monthyear', 'monthname'],
+            required: true
+        },
+        cost: {
+            patterns: ['cost', 'costofgoods', 'cogs', 'totalcost', 'costofgoodssold',
+                       'cogstotal', 'supplycost', 'goodscost', 'amount'],
+            required: true
+        },
+        qty: {
+            patterns: ['qty', 'quantity', 'itemcount', 'items', 'units',
+                       'itemsshipped', 'qtyshipped', 'shipqty', 'count'],
+            required: false
+        },
+        ros: {
+            patterns: ['ros', 'repairorders', 'cpro', 'cpros', 'rocount',
+                       'repairorder', 'orders', 'roqty', 'numberofros'],
+            required: true
+        },
+        quarter: {
+            patterns: ['quarter', 'qtr', 'q'],
+            required: false
+        }
+    };
+
+    const TOP_ITEMS_FIELD_PATTERNS = {
+        code: {
+            patterns: ['code', 'itemcode', 'partcode', 'sku', 'partno',
+                       'partnumber', 'itemno', 'itemnumber', 'productcode', 'id'],
+            required: false
+        },
+        desc: {
+            patterns: ['desc', 'description', 'itemdescription', 'itemdesc',
+                       'name', 'itemname', 'productname', 'product', 'item'],
+            required: true
+        },
+        cost: {
+            patterns: ['cost', 'totalcost', 'annualcost', 'amount', 'total',
+                       'price', 'value', 'spend', 'dollartotal'],
+            required: true
+        }
+    };
+
+    // ===== FILE IMPORT: HELPERS =====
+    function canonicalize(header) {
+        return String(header).toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+    }
+
+    function parseNumber(val) {
+        if (typeof val === 'number') return val;
+        if (!val && val !== 0) return 0;
+        const cleaned = String(val).replace(/[$,\s]/g, '');
+        return parseFloat(cleaned);
+    }
+
+    function inferQuarter(monthStr) {
+        const lower = monthStr.toLowerCase();
+        if (/jan|feb|mar/.test(lower)) return 'Q1';
+        if (/apr|may|jun/.test(lower)) return 'Q2';
+        if (/jul|aug|sep/.test(lower)) return 'Q3';
+        if (/oct|nov|dec/.test(lower)) return 'Q4';
+        return '';
+    }
+
+    // ===== FILE IMPORT: COLUMN DETECTION =====
+    function scoreMapping(headers, fieldPatterns) {
+        const mapping = {};
+        let score = 0;
+        let requiredMet = true;
+        const usedHeaders = new Set();
+
+        // Pass 1: exact canonical matches
+        for (const [field, config] of Object.entries(fieldPatterns)) {
+            for (const header of headers) {
+                if (usedHeaders.has(header)) continue;
+                const canon = canonicalize(header);
+                if (config.patterns.includes(canon)) {
+                    mapping[field] = header;
+                    usedHeaders.add(header);
+                    score += 10;
+                    break;
+                }
+            }
+        }
+
+        // Pass 2: substring/contains matches for unmapped fields
+        for (const [field, config] of Object.entries(fieldPatterns)) {
+            if (mapping[field]) continue;
+            for (const header of headers) {
+                if (usedHeaders.has(header)) continue;
+                const canon = canonicalize(header);
+                const match = config.patterns.some(p => canon.includes(p) || p.includes(canon));
+                if (match) {
+                    mapping[field] = header;
+                    usedHeaders.add(header);
+                    score += 5;
+                    break;
+                }
+            }
+        }
+
+        for (const [field, config] of Object.entries(fieldPatterns)) {
+            if (config.required && !mapping[field]) requiredMet = false;
+        }
+
+        return { mapping, score, requiredMet };
+    }
+
+    function detectSheetType(jsonRows) {
+        if (jsonRows.length === 0) return { type: 'unknown', mapping: {} };
+
+        const headers = Object.keys(jsonRows[0]);
+        const monthlyScore = scoreMapping(headers, MONTHLY_FIELD_PATTERNS);
+        const topItemsScore = scoreMapping(headers, TOP_ITEMS_FIELD_PATTERNS);
+
+        // Heuristic: check for month-like values
+        const hasMonthValues = jsonRows.some(row => {
+            const firstVal = String(Object.values(row)[0]).toLowerCase();
+            return /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/.test(firstVal);
+        });
+        if (hasMonthValues) monthlyScore.score += 20;
+
+        if (monthlyScore.score > topItemsScore.score && monthlyScore.requiredMet) {
+            return { type: 'monthly', mapping: monthlyScore.mapping };
+        } else if (topItemsScore.requiredMet) {
+            return { type: 'topItems', mapping: topItemsScore.mapping };
+        }
+
+        return { type: 'unknown', mapping: {} };
+    }
+
+    // ===== FILE IMPORT: DATA PARSING =====
+    function parseMonthlyData(jsonRows, mapping) {
+        const parsed = [];
+        const errors = [];
+
+        jsonRows.forEach((row, i) => {
+            const monthRaw = String(row[mapping.month] || '').trim();
+            const costRaw = row[mapping.cost];
+            const rosRaw = row[mapping.ros];
+            const qtyRaw = mapping.qty ? row[mapping.qty] : 0;
+            const quarterRaw = mapping.quarter ? row[mapping.quarter] : null;
+
+            if (!monthRaw && !costRaw) return;
+
+            const cost = parseNumber(costRaw);
+            const ros = parseNumber(rosRaw);
+            const qty = parseNumber(qtyRaw);
+
+            if (isNaN(cost)) { errors.push('Row ' + (i + 2) + ': invalid cost "' + costRaw + '"'); return; }
+            if (isNaN(ros))  { errors.push('Row ' + (i + 2) + ': invalid RO count "' + rosRaw + '"'); return; }
+
+            parsed.push({
+                month: monthRaw,
+                cost: cost,
+                qty: qty,
+                ros: ros,
+                quarter: quarterRaw || inferQuarter(monthRaw)
+            });
+        });
+
+        return { data: parsed, errors };
+    }
+
+    function parseTopItemsData(jsonRows, mapping) {
+        const parsed = [];
+        const errors = [];
+
+        jsonRows.forEach((row, i) => {
+            const desc = String(row[mapping.desc] || '').trim();
+            const costRaw = row[mapping.cost];
+            const code = mapping.code ? String(row[mapping.code] || '').trim() : '';
+
+            if (!desc && !costRaw) return;
+
+            const cost = parseNumber(costRaw);
+            if (isNaN(cost) || cost <= 0) {
+                errors.push('Row ' + (i + 2) + ': invalid cost "' + costRaw + '" for item "' + desc + '"');
+                return;
+            }
+
+            parsed.push({ code, desc, cost });
+        });
+
+        parsed.sort((a, b) => b.cost - a.cost);
+        return { data: parsed, errors };
+    }
+
+    // ===== FILE IMPORT: FEEDBACK UI =====
+    function showFeedback(type, message) {
+        const el = document.getElementById('importFeedback');
+        el.className = 'import-feedback ' + type;
+        el.innerHTML = message;
+        el.style.display = 'block';
+    }
+
+    function buildMappingTable(mapping, patterns) {
+        let html = '<table style="margin:8px 0;font-size:0.9em;border-collapse:collapse;">';
+        for (const [field, config] of Object.entries(patterns)) {
+            const mapped = mapping[field];
+            const icon = mapped ? '&#10003;' : (config.required ? '&#10007;' : '&mdash;');
+            const color = mapped ? '#059669' : (config.required ? '#dc2626' : '#888');
+            html += '<tr>';
+            html += '<td style="padding:2px 12px 2px 0;color:' + color + '">' + icon + '</td>';
+            html += '<td style="padding:2px 12px 2px 0;font-weight:600">' + field + '</td>';
+            html += '<td style="padding:2px 0;color:#666">' + (mapped ? '&larr; "' + mapped + '"' : '(not found)') + '</td>';
+            html += '</tr>';
+        }
+        html += '</table>';
+        return html;
+    }
+
+    // ===== FILE IMPORT: PIVOT TABLE DETECTION =====
+    // Handles spreadsheets where months are columns (3 cols per month: Cost, Qty, CP RO)
+    // Row 1: month names across columns, Row 2: sub-headers, Row 3: totals, Rows 4+: items
+    function tryParsePivotSheet(sheet) {
+        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+        const colCount = range.e.c - range.s.c + 1;
+        const rowCount = range.e.r - range.s.r + 1;
+        if (colCount < 6 || rowCount < 4) return null;
+
+        // Helper to get cell value
+        function cell(r, c) {
+            const addr = XLSX.utils.encode_cell({ r: r, c: c });
+            const cl = sheet[addr];
+            return cl ? cl.v : null;
+        }
+
+        // Scan first two rows for month names (handles merged headers)
+        const monthPattern = /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i;
+        const monthColumns = []; // { col, name }
+        for (let r = 0; r <= 1; r++) {
+            for (let c = 0; c <= range.e.c; c++) {
+                const val = cell(r, c);
+                if (val && monthPattern.test(String(val)) && !monthColumns.some(m => m.col === c)) {
+                    monthColumns.push({ col: c, name: String(val), headerRow: r });
+                }
+            }
+        }
+
+        if (monthColumns.length < 2) return null; // Not a pivot layout
+
+        // Determine the sub-header row (the row with Cost/Quantity/CP RO labels)
+        // It's typically the row after the month names, or the same row if months are in row 0
+        const subHeaderRow = monthColumns[0].headerRow === 0 ? 1 : 2;
+
+        // Read sub-headers
+        const subHeaders = [];
+        for (let c = 0; c <= range.e.c; c++) {
+            const val = cell(subHeaderRow, c);
+            subHeaders.push(val ? String(val).toLowerCase().trim() : '');
+        }
+
+        // For each month column, find the Cost, Qty, and CP RO sub-columns
+        const monthBlocks = [];
+        monthColumns.forEach(mc => {
+            const block = { name: mc.name, costCol: -1, qtyCol: -1, roCol: -1 };
+            // Search from the month's column through the next few columns
+            for (let c = mc.col; c < Math.min(mc.col + 5, range.e.c + 1); c++) {
+                const sh = subHeaders[c];
+                if (/cost/i.test(sh) && block.costCol < 0) block.costCol = c;
+                else if (/qty|quantity/i.test(sh) && block.qtyCol < 0) block.qtyCol = c;
+                else if (/cp\s*ro|^ro$/i.test(sh) && block.roCol < 0) block.roCol = c;
+            }
+            if (block.costCol >= 0 && block.roCol >= 0) {
+                monthBlocks.push(block);
+            }
+        });
+
+        if (monthBlocks.length < 2) return null;
+
+        // Find Code and Description columns from the sub-header row
+        let codeCol = -1, descCol = -1;
+        for (let c = 0; c <= Math.min(3, range.e.c); c++) {
+            const val = cell(subHeaderRow, c);
+            if (val) {
+                const lv = String(val).toLowerCase().trim();
+                if (/code|sku|part/i.test(lv) && codeCol < 0) codeCol = c;
+                if (/desc|description/i.test(lv) && descCol < 0) descCol = c;
+            }
+        }
+        // Fallback: assume col 0 = code, col 1 = description
+        if (codeCol < 0) codeCol = 0;
+        if (descCol < 0) descCol = 1;
+
+        // Find the total row by looking for "TOTAL" in the first few columns
+        let totalRowIdx = -1;
+        for (let r = subHeaderRow + 1; r <= Math.min(subHeaderRow + 4, range.e.r); r++) {
+            for (let c = 0; c <= Math.min(1, range.e.c); c++) {
+                const val = cell(r, c);
+                if (val && String(val).toUpperCase().trim() === 'TOTAL') {
+                    totalRowIdx = r;
+                    break;
+                }
+            }
+            if (totalRowIdx >= 0) break;
+        }
+
+        // Extract monthly data from the total row
+        const monthlyParsed = [];
+        if (totalRowIdx >= 0) {
+            monthBlocks.forEach(mb => {
+                const cost = parseNumber(cell(totalRowIdx, mb.costCol));
+                const qty = mb.qtyCol >= 0 ? parseNumber(cell(totalRowIdx, mb.qtyCol)) : 0;
+                const ros = parseNumber(cell(totalRowIdx, mb.roCol));
+                if (!isNaN(cost) && !isNaN(ros) && ros > 0) {
+                    monthlyParsed.push({
+                        month: mb.name,
+                        cost: cost,
+                        qty: qty,
+                        ros: ros,
+                        quarter: inferQuarter(mb.name)
+                    });
+                }
+            });
+        }
+
+        // Sort months chronologically
+        const monthOrder = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        monthlyParsed.sort((a, b) => {
+            const ai = monthOrder.findIndex(m => a.month.toLowerCase().includes(m));
+            const bi = monthOrder.findIndex(m => b.month.toLowerCase().includes(m));
+            return ai - bi;
+        });
+
+        // Extract top items from item rows (find the "Total" cost column)
+        let totalCostCol = -1;
+        // Look for a "Total" header in the header rows with a "Cost" sub-header
+        for (let r = 0; r <= Math.min(1, range.e.r); r++) {
+            for (let c = 0; c <= range.e.c; c++) {
+                const hdr = cell(r, c);
+                if (hdr && String(hdr).toLowerCase().trim() === 'total') {
+                    // Check if this column or next few have "Cost" sub-header
+                    for (let sc = c; sc < Math.min(c + 4, range.e.c + 1); sc++) {
+                        if (subHeaders[sc] && /cost/i.test(subHeaders[sc])) {
+                            totalCostCol = sc;
+                            break;
+                        }
+                    }
+                    if (totalCostCol >= 0) break;
+                }
+            }
+            if (totalCostCol >= 0) break;
+        }
+
+        const topItemsParsed = [];
+        const itemStartRow = (totalRowIdx >= 0 ? totalRowIdx + 1 : 3);
+        if (totalCostCol >= 0) {
+            for (let r = itemStartRow; r <= range.e.r; r++) {
+                const code = String(cell(r, codeCol) || '').trim();
+                const desc = String(cell(r, descCol) || '').trim();
+                const cost = parseNumber(cell(r, totalCostCol));
+                if ((!code && !desc) || isNaN(cost) || cost <= 0) continue;
+                topItemsParsed.push({ code, desc, cost });
+            }
+            topItemsParsed.sort((a, b) => b.cost - a.cost);
+        }
+
+        if (monthlyParsed.length === 0 && topItemsParsed.length === 0) return null;
+
+        return {
+            monthly: monthlyParsed.length > 0 ? { data: monthlyParsed, errors: [] } : null,
+            topItems: topItemsParsed.length > 0 ? { data: topItemsParsed, errors: [] } : null,
+            monthCount: monthlyParsed.length,
+            itemCount: topItemsParsed.length
+        };
+    }
+
+    // ===== FILE IMPORT: ORCHESTRATION =====
+    function processWorkbook(workbook, filename) {
+        const results = { monthly: null, topItems: null, warnings: [], monthlyMapping: {}, topItemsMapping: {} };
+
+        // First, try pivot table detection on each sheet
+        let pivotFound = false;
+        for (const name of workbook.SheetNames) {
+            const sheet = workbook.Sheets[name];
+            console.log('[Import] Trying pivot detection on sheet:', name);
+            const pivotResult = tryParsePivotSheet(sheet);
+            console.log('[Import] Pivot result:', pivotResult);
+            if (pivotResult) {
+                if (pivotResult.monthly) results.monthly = pivotResult.monthly;
+                if (pivotResult.topItems) results.topItems = pivotResult.topItems;
+                results.pivotDetected = true;
+                pivotFound = true;
+                break;
+            }
+        }
+        console.log('[Import] Pivot found:', pivotFound, 'Monthly:', results.monthly?.data?.length, 'Items:', results.topItems?.data?.length);
+
+        // If pivot detection didn't work, fall back to standard row-based detection
+        if (!pivotFound) {
+            if (workbook.SheetNames.length >= 2) {
+                workbook.SheetNames.forEach(name => {
+                    const sheet = workbook.Sheets[name];
+                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                    if (json.length === 0) return;
+
+                    const detection = detectSheetType(json);
+                    if (detection.type === 'monthly' && !results.monthly) {
+                        results.monthly = parseMonthlyData(json, detection.mapping);
+                        results.monthlyMapping = detection.mapping;
+                    } else if (detection.type === 'topItems' && !results.topItems) {
+                        results.topItems = parseTopItemsData(json, detection.mapping);
+                        results.topItemsMapping = detection.mapping;
+                    }
+                });
+            } else {
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                if (json.length === 0) {
+                    showFeedback('error', 'File contains no data rows.');
+                    return;
+                }
+
+                const detection = detectSheetType(json);
+                if (detection.type === 'monthly') {
+                    results.monthly = parseMonthlyData(json, detection.mapping);
+                    results.monthlyMapping = detection.mapping;
+                } else if (detection.type === 'topItems') {
+                    results.topItems = parseTopItemsData(json, detection.mapping);
+                    results.topItemsMapping = detection.mapping;
+                } else {
+                    showFeedback('error',
+                        'Could not auto-detect columns in "' + filename + '".<br><br>' +
+                        '<strong>For monthly data</strong>, expected headers like: Month, Cost, ROs<br>' +
+                        '<strong>For top items</strong>, expected headers like: Description, Cost');
+                    return;
+                }
+            }
+        }
+
+        applyImportedData(results, filename);
+    }
+
+    function applyImportedData(results, filename) {
+        let hasData = false;
+        let html = '<strong>Imported: ' + filename + '</strong>';
+
+        // Clear previous data before applying new import
+        monthlyData = [];
+        topItems = [];
+
+        if (results.monthly && results.monthly.data.length > 0) {
+            monthlyData = results.monthly.data;
+            hasData = true;
+            html += '<br><br><strong>Monthly Data</strong> — ' + monthlyData.length + ' periods loaded';
+            if (!results.pivotDetected) {
+                html += ':' + buildMappingTable(results.monthlyMapping, MONTHLY_FIELD_PATTERNS);
+            }
+            if (results.monthly.errors.length > 0) {
+                html += '<div style="color:#92400e;margin-top:4px;"><strong>Warnings:</strong><br>';
+                results.monthly.errors.forEach(e => { html += '&bull; ' + e + '<br>'; });
+                html += '</div>';
+            }
+        }
+
+        if (results.topItems && results.topItems.data.length > 0) {
+            topItems = results.topItems.data;
+            hasData = true;
+            html += '<br><strong>Top Items</strong> — ' + topItems.length + ' items loaded';
+            if (!results.pivotDetected) {
+                html += ':' + buildMappingTable(results.topItemsMapping, TOP_ITEMS_FIELD_PATTERNS);
+            }
+            if (results.topItems.errors.length > 0) {
+                html += '<div style="color:#92400e;margin-top:4px;"><strong>Warnings:</strong><br>';
+                results.topItems.errors.forEach(e => { html += '&bull; ' + e + '<br>'; });
+                html += '</div>';
+            }
+        }
+
+        if (!hasData) {
+            // Restore defaults since we cleared them
+            monthlyData = DEFAULT_MONTHLY_DATA.map(d => ({...d}));
+            topItems = DEFAULT_TOP_ITEMS.map(d => ({...d}));
+            showFeedback('error',
+                'No valid data found in "' + filename + '".<br><br>' +
+                '<strong>For monthly data</strong>, expected headers like: Month, Cost, ROs<br>' +
+                '<strong>For top items</strong>, expected headers like: Description, Cost');
+            return;
+        }
+
+        document.getElementById('importStatus').textContent = 'Using: ' + filename;
+        showFeedback('success', html);
+        renderAll();
+    }
+
+    function handleFile(file) {
+        const extension = file.name.split('.').pop().toLowerCase();
+
+        if (!['csv', 'xlsx', 'xls'].includes(extension)) {
+            showFeedback('error', 'Unsupported file type. Please upload a CSV, XLSX, or XLS file.');
+            return;
+        }
+
+        if (typeof XLSX === 'undefined') {
+            showFeedback('error', 'Excel support requires the SheetJS library. Check your internet connection and reload the page.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                processWorkbook(workbook, file.name);
+            } catch (err) {
+                showFeedback('error', 'Failed to parse file: ' + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function resetData() {
+        monthlyData = DEFAULT_MONTHLY_DATA.map(d => ({...d}));
+        topItems = DEFAULT_TOP_ITEMS.map(d => ({...d}));
+        document.getElementById('importStatus').textContent = '';
+        document.getElementById('importFeedback').style.display = 'none';
+        document.getElementById('fileInput').value = '';
+        renderAll();
+    }
+
+    function openImportModal() {
+        document.getElementById('importOverlay').classList.add('active');
+    }
+
+    function closeImportModal() {
+        document.getElementById('importOverlay').classList.remove('active');
+    }
+
+    // ===== FILE IMPORT: EVENT WIRING =====
+    document.getElementById('newCustomerBtn').addEventListener('click', openImportModal);
+    document.getElementById('importCloseBtn').addEventListener('click', closeImportModal);
+    document.getElementById('importOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeImportModal();
+    });
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+    });
+
+    document.getElementById('browseLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('fileInput').click();
+    });
+
+    document.getElementById('dropZone').addEventListener('click', function(e) {
+        if (e.target.id !== 'browseLink') document.getElementById('fileInput').click();
+    });
+
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', function() {
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+    });
+
     // Initial render
     renderAll();
-    renderTopItems();
     </script>
 </body>
 </html>
