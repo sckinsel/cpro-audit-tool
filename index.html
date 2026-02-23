@@ -521,7 +521,7 @@
         <div class="page-header">
             <div>
                 <h1>CP RO Gross Margin Audit</h1>
-                <p class="subtitle">Covert Ford &mdash; January 2025 through December 2025 &mdash; Ancillary Shop Supplies Program</p>
+                <p class="subtitle" id="subtitleText"><strong>Covert Ford</strong> &mdash; Ancillary Shop Supplies Program</p>
                 <div class="import-status" id="importStatus"></div>
             </div>
             <div class="header-actions">
@@ -1363,7 +1363,10 @@
             return;
         }
 
-        document.getElementById('importStatus').textContent = 'Using: ' + filename;
+        // Update subtitle with customer name from filename
+        const customerName = filename.replace(/\.(csv|xlsx|xls)$/i, '').replace(/[-_]/g, ' ').trim();
+        document.getElementById('subtitleText').innerHTML = '<strong>' + customerName + '</strong>';
+        document.getElementById('importStatus').textContent = '';
         showFeedback('success', html);
         renderAll();
     }
@@ -1406,6 +1409,7 @@
     function clearData() {
         monthlyData = [];
         topItems = [];
+        document.getElementById('subtitleText').innerHTML = 'No customer loaded';
         document.getElementById('importStatus').textContent = '';
         document.getElementById('importFeedback').style.display = 'none';
         document.getElementById('fileInput').value = '';
