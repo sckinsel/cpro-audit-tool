@@ -521,7 +521,7 @@
         <div class="page-header">
             <div>
                 <h1>CP RO Gross Margin Audit</h1>
-                <p class="subtitle" id="subtitleText"><strong>Covert Ford</strong> &mdash; Ancillary Shop Supplies Program</p>
+                <p class="subtitle" id="subtitleText">Upload a file to get started</p>
                 <div class="import-status" id="importStatus"></div>
             </div>
             <div class="header-actions">
@@ -645,9 +645,9 @@
         { code: 'MCJ2018595', desc: 'E2 ANTIBACTERIAL FOAM SOAP, 1100ML - 1EA', cost: 845.73 },
     ];
 
-    // Mutable data arrays (replaced on file import)
-    let monthlyData = DEFAULT_MONTHLY_DATA.map(d => ({...d}));
-    let topItems = DEFAULT_TOP_ITEMS.map(d => ({...d}));
+    // Mutable data arrays (start empty, populated on file import)
+    let monthlyData = [];
+    let topItems = [];
 
     let currentView = 'monthly';
 
