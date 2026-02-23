@@ -1141,7 +1141,11 @@
 
         // For each month column, find the Cost, Qty, and CP RO sub-columns
         const monthBlocks = [];
+        const seenMonthNames = new Set();
         monthColumns.forEach(mc => {
+            // Normalize month name for dedup (e.g. "Dec 2025" → "dec 2025")
+            const normName = mc.name.toLowerCase().trim();
+            if (seenMonthNames.has(normName)) return;
             const block = { name: mc.name, costCol: -1, qtyCol: -1, roCol: -1 };
             // Search from the month's column through the next few columns
             for (let c = mc.col; c < Math.min(mc.col + 5, range.e.c + 1); c++) {
@@ -1151,6 +1155,7 @@
                 else if (/cp\s*ro|^ro$/i.test(sh) && block.roCol < 0) block.roCol = c;
             }
             if (block.costCol >= 0 && block.roCol >= 0) {
+                seenMonthNames.add(normName);
                 monthBlocks.push(block);
             }
         });
@@ -1202,6 +1207,19 @@
                 }
             });
         }
+
+        // Deduplicate monthly data by month name (final safety net)
+        const seenMonths = new Set();
+        const dedupedMonthly = [];
+        monthlyParsed.forEach(entry => {
+            const key = entry.month.toLowerCase().trim();
+            if (!seenMonths.has(key)) {
+                seenMonths.add(key);
+                dedupedMonthly.push(entry);
+            }
+        });
+        monthlyParsed.length = 0;
+        dedupedMonthly.forEach(e => monthlyParsed.push(e));
 
         // Sort months chronologically
         const monthOrder = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
