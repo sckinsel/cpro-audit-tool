@@ -670,6 +670,13 @@
         return prefix + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function fmtDiffPct(difference, retailTotal) {
+        var dollar = fmtDiff(difference);
+        if (retailTotal === 0) return dollar;
+        var pct = Math.abs(difference / retailTotal * 100).toFixed(1);
+        return dollar + ' (' + pct + '%)';
+    }
+
     function inferQuarter(monthStr) {
         const lower = monthStr.toLowerCase();
         if (/jan|feb|mar/.test(lower)) return 'Q1';
@@ -808,7 +815,7 @@
         var diffLabel = annual.difference > 0 ? 'Retail costs more' : annual.difference < 0 ? 'Per-RO costs more' : 'Balanced';
         html += '<div class="card ' + diffClass + '">';
         html += '<div class="card-label">Difference</div>';
-        html += '<div class="card-value">' + fmtDiff(annual.difference) + '</div>';
+        html += '<div class="card-value">' + fmtDiffPct(annual.difference, annual.retailTotal) + '</div>';
         html += '<div class="card-sub">' + diffLabel + '</div>';
         html += '</div>';
 
@@ -840,7 +847,7 @@
             html += '<td>' + d.roCount.toLocaleString() + '</td>';
             html += '<td>' + fmt(d.retailTotal) + '</td>';
             html += '<td>' + fmt(d.perROTotal) + '</td>';
-            html += '<td class="' + diffClass + '">' + fmtDiff(d.difference) + '</td>';
+            html += '<td class="' + diffClass + '">' + fmtDiffPct(d.difference, d.retailTotal) + '</td>';
             html += '</tr>';
         });
 
@@ -851,7 +858,7 @@
             html += '<td>' + totals.roCount.toLocaleString() + '</td>';
             html += '<td>' + fmt(totals.retailTotal) + '</td>';
             html += '<td>' + fmt(totals.perROTotal) + '</td>';
-            html += '<td class="' + diffClass + '">' + fmtDiff(totals.difference) + '</td>';
+            html += '<td class="' + diffClass + '">' + fmtDiffPct(totals.difference, totals.retailTotal) + '</td>';
             html += '</tr>';
         }
 
