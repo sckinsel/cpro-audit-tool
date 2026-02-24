@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CP RO Gross Margin Audit - Covert Ford 2025</title>
+    <title>Per-RO Pricing Comparison</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -116,14 +116,71 @@
             color: #888;
             font-size: 0.85em;
         }
-        .breakeven-note {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
+        .suggested-rate-badge {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
             border-radius: 8px;
             padding: 10px 16px;
             font-size: 0.9em;
-            color: #92400e;
+            color: #166534;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
+        .use-suggested-btn {
+            padding: 5px 14px;
+            border-radius: 6px;
+            border: 1px solid #059669;
+            background: #fff;
+            color: #059669;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        .use-suggested-btn:hover { background: #059669; color: #fff; }
+
+        /* RO Entry Section */
+        .ro-entry-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .ro-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .ro-entry-header h2 {
+            font-size: 1.1em;
+            color: #333;
+        }
+        .ro-entry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .ro-entry-item label {
+            display: block;
+            font-size: 0.82em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .ro-entry-item input {
+            width: 100%;
+            padding: 7px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            text-align: center;
+            font-weight: 600;
+        }
+        .ro-entry-item input:focus { border-color: #2563eb; outline: none; }
 
         /* Summary Cards */
         .summary-cards {
@@ -223,26 +280,13 @@
         }
         tbody tr.total-row td { border-top: 2px solid #1a1a2e; }
 
-        .rebate-positive {
+        .difference-positive {
             color: #dc2626;
             font-weight: 700;
         }
-        .rebate-zero {
+        .difference-negative {
             color: #059669;
-            font-weight: 600;
-        }
-        .margin-over {
-            background: #fef2f2;
-            color: #dc2626;
             font-weight: 700;
-            border-radius: 4px;
-            padding: 2px 6px;
-        }
-        .margin-under {
-            color: #059669;
-        }
-        .margin-at {
-            color: #d97706;
         }
 
         /* Chart */
@@ -288,8 +332,8 @@
             transition: height 0.4s ease;
             position: relative;
         }
-        .chart-bar.cost { background: #ef4444; }
-        .chart-bar.revenue { background: #22c55e; }
+        .chart-bar.retail { background: #3b82f6; }
+        .chart-bar.perro { background: #22c55e; }
         .chart-bar:hover { opacity: 0.8; }
         .chart-label {
             font-size: 0.7em;
@@ -330,14 +374,6 @@
             width: 12px;
             height: 12px;
             border-radius: 3px;
-        }
-        .margin-line {
-            position: absolute;
-            left: 0;
-            right: 0;
-            border-top: 2px dashed #f59e0b;
-            z-index: 2;
-            pointer-events: none;
         }
 
         /* Top Items */
@@ -381,7 +417,7 @@
         }
         .item-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #ef4444, #f87171);
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
             border-radius: 4px;
             transition: width 0.4s ease;
         }
@@ -514,7 +550,7 @@
         </div>
         <div class="page-header">
             <div>
-                <h1>CP RO Gross Margin Audit</h1>
+                <h1>Per-RO Pricing Comparison</h1>
                 <p class="subtitle" id="subtitleText">Upload a file to get started</p>
                 <div class="import-status" id="importStatus"></div>
             </div>
@@ -539,17 +575,26 @@
 
         <div class="rate-section">
             <div>
-                <label>Charge Per CP RO:</label>
+                <label>Per-RO Rate:</label>
                 <div class="rate-input-group">
                     <span>$</span>
-                    <input type="number" id="roRate" value="7.09" step="0.25" min="0">
+                    <input type="number" id="roRate" value="0.00" step="0.25" min="0">
                     <span>/ RO</span>
                 </div>
-                <div class="rate-hint">Change this rate to see how margins and rebates adjust</div>
+                <div class="rate-hint">Adjust this rate to compare Per-RO pricing vs Retail pricing</div>
             </div>
-            <div class="breakeven-note" id="breakevenNote">
-                50% margin breakeven rate for this account: <strong>$7.09 / RO</strong>
+            <div class="suggested-rate-badge" id="suggestedRateNote">
+                <span>Suggested rate (matches retail): <strong id="suggestedRateValue">$0.00 / RO</strong></span>
+                <button class="use-suggested-btn" id="useSuggestedBtn">Use This Rate</button>
             </div>
+        </div>
+
+        <div class="ro-entry-section" id="roEntrySection" style="display:none;">
+            <div class="ro-entry-header">
+                <h2>RO Counts per Month</h2>
+                <span class="rate-hint" id="roSourceLabel">Manual entry</span>
+            </div>
+            <div class="ro-entry-grid" id="roEntryGrid"></div>
         </div>
 
         <div class="summary-cards" id="summaryCards"></div>
@@ -588,63 +633,30 @@
         </div>
 
         <div class="chart-section">
-            <h2>Cost vs Revenue by Period</h2>
+            <h2>Retail vs Per-RO Pricing by Period</h2>
             <div class="chart-container" id="chartContainer"></div>
             <div class="chart-legend">
-                <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Cost of Goods</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Revenue (CP RO x Rate)</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> 50% Margin Line</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Retail Total</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Per-RO Total</div>
             </div>
         </div>
 
         <div class="top-items" id="topItemsSection">
-            <h2>Top 15 Items by Annual Cost</h2>
+            <h2>Top 15 Items by Retail Value</h2>
             <div id="topItemsContainer"></div>
         </div>
     </div>
 
     <script>
-    // ===== DATA FROM SPREADSHEET =====
-    const DEFAULT_MONTHLY_DATA = [
-        { month: 'Jan 2025', cost: 5931.92089, qty: 4187, ros: 1267, quarter: 'Q1' },
-        { month: 'Feb 2025', cost: 3732.21739, qty: 1857, ros: 1295, quarter: 'Q1' },
-        { month: 'Mar 2025', cost: 5439.38564, qty: 1387, ros: 1404, quarter: 'Q1' },
-        { month: 'Apr 2025', cost: 3808.66862, qty: 1900, ros: 1356, quarter: 'Q2' },
-        { month: 'May 2025', cost: 5622.34741, qty: 1599, ros: 1402, quarter: 'Q2' },
-        { month: 'Jun 2025', cost: 4065.96941, qty: 1100, ros: 1433, quarter: 'Q2' },
-        { month: 'Jul 2025', cost: 5685.91136, qty: 3775, ros: 1530, quarter: 'Q3' },
-        { month: 'Aug 2025', cost: 5060.25925, qty: 2437, ros: 1384, quarter: 'Q3' },
-        { month: 'Sep 2025', cost: 3910.71322, qty: 1658, ros: 1338, quarter: 'Q3' },
-        { month: 'Oct 2025', cost: 7265.55542, qty: 2866, ros: 1494, quarter: 'Q4' },
-        { month: 'Nov 2025', cost: 3142.27225, qty: 1345, ros: 1339, quarter: 'Q4' },
-        { month: 'Dec 2025', cost: 5232.61343, qty: 3719, ros: 1376, quarter: 'Q4' },
-    ];
-
-    // Top items by annual cost (from spreadsheet)
-    const DEFAULT_TOP_ITEMS = [
-        { code: 'MC013B', desc: 'SELECT BRAKE AND PARTS CLEANER, 55GAL', cost: 12765.00 },
-        { code: 'MC518', desc: "EMMOTION WHT HI CAPACITY ROLL TOWEL 6/600'", cost: 5842.30 },
-        { code: 'MCMSUS160-2.5', desc: 'SUPER S DIESEL EXHAUST FLUID, 2.5 GALLON', cost: 5544.00 },
-        { code: 'MC2167', desc: 'DISTILLED WATER, 1 GAL.', cost: 2299.70 },
-        { code: 'MCJ385815K', desc: 'CAN LINER, 38 X 58, BLK 1.5MIL 5/20', cost: 2105.35 },
-        { code: 'MC254', desc: 'SEAT COVER, SLIP N GRIP, 500ROLL', cost: 1922.80 },
-        { code: 'MC213', desc: 'ROLL, SORBENT, 30" X 150FT', cost: 1481.76 },
-        { code: 'MCJ3339XHW', desc: 'CAN LINER, 33 X 39, WHITE, .8 MIL 250/CS', cost: 1419.56 },
-        { code: 'MCMWHTK1000', desc: 'HEAVY DUTY KEY TAG, RULED, WHITE, 500 PK', cost: 1404.00 },
-        { code: 'MCJ2432XHW', desc: 'CAN LINER, 24 X 32 XH-DUTY .50MIL, WHTE 10/50', cost: 1210.79 },
-        { code: 'MCMGRNK1000', desc: 'HEAVY DUTY KEY TAG, RULED, GREEN, 500 PK', cost: 1014.00 },
-        { code: 'MCJ8600', desc: 'U FLOOR MAT URINAL, UNIGARD 6/CS', cost: 1005.04 },
-        { code: 'MC1989', desc: 'OIL CHANGE PRINTER, KEYBOARD, COVER, RIBBON', cost: 990.00 },
-        { code: 'MC202', desc: 'HOSE REEL, AUTO, 50FT, 3/8" HOSE', cost: 845.85 },
-        { code: 'MCJ2018595', desc: 'E2 ANTIBACTERIAL FOAM SOAP, 1100ML - 1EA', cost: 845.73 },
-    ];
-
-    // Mutable data arrays (start empty, populated on file import)
-    let monthlyData = [];
-    let topItems = [];
-
+    // ===== STATE =====
+    let itemData = [];          // All imported item-level rows
+    let roData = {};            // Month -> RO count mapping
+    let roDataSource = 'manual'; // 'file' or 'manual'
     let currentView = 'monthly';
 
+    const MONTH_ORDER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+    // ===== UTILITIES =====
     function getRate() {
         return parseFloat(document.getElementById('roRate').value) || 0;
     }
@@ -653,134 +665,193 @@
         return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function fmtPct(n) {
-        return n.toFixed(1) + '%';
+    function fmtDiff(n) {
+        const prefix = n >= 0 ? '+' : '-';
+        return prefix + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function inferQuarter(monthStr) {
+        const lower = monthStr.toLowerCase();
+        if (/jan|feb|mar/.test(lower)) return 'Q1';
+        if (/apr|may|jun/.test(lower)) return 'Q2';
+        if (/jul|aug|sep/.test(lower)) return 'Q3';
+        if (/oct|nov|dec/.test(lower)) return 'Q4';
+        return '';
+    }
+
+    function normalizeMonth(str) {
+        // Convert various month formats to "Mon YYYY" (e.g., "Jan 2025")
+        const s = String(str).trim();
+        const monthNames = ['january','february','march','april','may','june',
+                            'july','august','september','october','november','december'];
+        const monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const lower = s.toLowerCase();
+
+        for (let i = 0; i < monthNames.length; i++) {
+            if (lower.includes(monthNames[i]) || lower.includes(monthAbbr[i].toLowerCase())) {
+                // Extract year
+                const yearMatch = s.match(/\d{4}/);
+                const year = yearMatch ? yearMatch[0] : '';
+                return year ? monthAbbr[i] + ' ' + year : monthAbbr[i];
+            }
+        }
+        return s; // Return as-is if no month detected
+    }
+
+    // ===== DATA AGGREGATION =====
+    function getMonthsInData() {
+        const months = [...new Set(itemData.map(item => item.month))];
+        months.sort((a, b) => {
+            const ai = MONTH_ORDER.findIndex(m => a.toLowerCase().includes(m));
+            const bi = MONTH_ORDER.findIndex(m => b.toLowerCase().includes(m));
+            return ai - bi;
+        });
+        return months;
+    }
+
+    function getMonthlySummaries() {
+        const rate = getRate();
+        const months = getMonthsInData();
+        return months.map(month => {
+            const monthItems = itemData.filter(item => item.month === month);
+            const retailTotal = monthItems.reduce((sum, item) => sum + item.retailTotal, 0);
+            const ourCostTotal = monthItems.reduce((sum, item) => sum + item.costTotal, 0);
+            const roCount = roData[month] || 0;
+            const perROTotal = roCount * rate;
+            const difference = retailTotal - perROTotal;
+            return {
+                period: month,
+                month: month,
+                quarter: inferQuarter(month),
+                retailTotal,
+                perROTotal,
+                difference,
+                ourCostTotal,
+                roCount,
+                itemCount: monthItems.length
+            };
+        });
     }
 
     function getQuarterlyData() {
+        const summaries = getMonthlySummaries();
         const quarters = {};
-        monthlyData.forEach(m => {
+        summaries.forEach(m => {
             if (!quarters[m.quarter]) {
-                quarters[m.quarter] = { period: m.quarter, cost: 0, qty: 0, ros: 0, months: [] };
+                quarters[m.quarter] = {
+                    period: m.quarter, retailTotal: 0, perROTotal: 0,
+                    difference: 0, ourCostTotal: 0, roCount: 0, itemCount: 0
+                };
             }
-            quarters[m.quarter].cost += m.cost;
-            quarters[m.quarter].qty += m.qty;
-            quarters[m.quarter].ros += m.ros;
-            quarters[m.quarter].months.push(m.month);
+            const q = quarters[m.quarter];
+            q.retailTotal += m.retailTotal;
+            q.perROTotal += m.perROTotal;
+            q.ourCostTotal += m.ourCostTotal;
+            q.roCount += m.roCount;
+            q.itemCount += m.itemCount;
+        });
+        Object.values(quarters).forEach(q => {
+            q.difference = q.retailTotal - q.perROTotal;
         });
         return Object.values(quarters);
     }
 
     function getAnnualData() {
-        const total = { period: 'Full Year 2025', cost: 0, qty: 0, ros: 0 };
-        monthlyData.forEach(m => {
-            total.cost += m.cost;
-            total.qty += m.qty;
-            total.ros += m.ros;
+        const summaries = getMonthlySummaries();
+        const total = {
+            period: 'Full Year', retailTotal: 0, perROTotal: 0,
+            difference: 0, ourCostTotal: 0, roCount: 0, itemCount: 0
+        };
+        summaries.forEach(m => {
+            total.retailTotal += m.retailTotal;
+            total.perROTotal += m.perROTotal;
+            total.ourCostTotal += m.ourCostTotal;
+            total.roCount += m.roCount;
+            total.itemCount += m.itemCount;
         });
+        total.difference = total.retailTotal - total.perROTotal;
         return [total];
     }
 
     function getDisplayData() {
-        if (currentView === 'monthly') return monthlyData.map(m => ({ period: m.month, ...m }));
+        if (currentView === 'monthly') return getMonthlySummaries();
         if (currentView === 'quarterly') return getQuarterlyData();
         return getAnnualData();
     }
 
-    function calcRow(d, rate) {
-        const revenue = d.ros * rate;
-        const grossProfit = revenue - d.cost;
-        const margin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
-        const targetRevenue = d.cost / 0.50;  // revenue needed for exactly 50%
-        const rebate = margin > 50 ? revenue - targetRevenue : 0;
-        return { ...d, revenue, grossProfit, margin, rebate };
+    function calcSuggestedRate() {
+        const summaries = getMonthlySummaries();
+        const totalRetail = summaries.reduce((s, m) => s + m.retailTotal, 0);
+        const totalROs = summaries.reduce((s, m) => s + m.roCount, 0);
+        return totalROs > 0 ? totalRetail / totalROs : 0;
     }
 
+    // ===== RENDERING =====
     function renderSummaryCards() {
-        const rate = getRate();
         const annual = getAnnualData()[0];
-        const r = calcRow(annual, rate);
-
-        const totalRebate = getDisplayData().reduce((sum, d) => {
-            const row = calcRow(d, rate);
-            return sum + row.rebate;
-        }, 0);
 
         let html = '';
 
-        html += `<div class="card card-blue">
-            <div class="card-label">Annual Revenue</div>
-            <div class="card-value">${fmt(r.revenue)}</div>
-            <div class="card-sub">${r.ros.toLocaleString()} ROs x ${fmt(rate)}</div>
-        </div>`;
+        html += '<div class="card card-blue">';
+        html += '<div class="card-label">Annual Retail Total</div>';
+        html += '<div class="card-value">' + fmt(annual.retailTotal) + '</div>';
+        html += '<div class="card-sub">' + annual.itemCount.toLocaleString() + ' line items across ' + getMonthsInData().length + ' months</div>';
+        html += '</div>';
 
-        html += `<div class="card">
-            <div class="card-label">Annual Cost of Goods</div>
-            <div class="card-value">${fmt(r.cost)}</div>
-            <div class="card-sub">${r.qty.toLocaleString()} items shipped</div>
-        </div>`;
+        html += '<div class="card card-green">';
+        html += '<div class="card-label">Annual Per-RO Total</div>';
+        html += '<div class="card-value">' + fmt(annual.perROTotal) + '</div>';
+        html += '<div class="card-sub">' + annual.roCount.toLocaleString() + ' ROs x ' + fmt(getRate()) + '</div>';
+        html += '</div>';
 
-        const marginClass = r.margin > 50 ? 'card-red' : r.margin >= 48 ? 'card-amber' : 'card-green';
-        html += `<div class="card ${marginClass}">
-            <div class="card-label">Annual Gross Margin</div>
-            <div class="card-value">${fmtPct(r.margin)}</div>
-            <div class="card-sub">Gross Profit: ${fmt(r.grossProfit)}</div>
-        </div>`;
+        var diffClass = annual.difference > 0 ? 'card-red' : annual.difference < 0 ? 'card-green' : 'card-amber';
+        var diffLabel = annual.difference > 0 ? 'Retail costs more' : annual.difference < 0 ? 'Per-RO costs more' : 'Balanced';
+        html += '<div class="card ' + diffClass + '">';
+        html += '<div class="card-label">Difference</div>';
+        html += '<div class="card-value">' + fmtDiff(annual.difference) + '</div>';
+        html += '<div class="card-sub">' + diffLabel + '</div>';
+        html += '</div>';
 
-        const rebateClass = totalRebate > 0 ? 'card-red' : 'card-green';
-        html += `<div class="card ${rebateClass}">
-            <div class="card-label">Total Rebate Owed (${currentView})</div>
-            <div class="card-value">${totalRebate > 0 ? fmt(totalRebate) : '$0.00'}</div>
-            <div class="card-sub">${totalRebate > 0 ? 'Amount over 50% margin to return' : 'No rebate — margin at or below 50%'}</div>
-        </div>`;
 
         document.getElementById('summaryCards').innerHTML = html;
     }
 
     function renderTable() {
-        const rate = getRate();
-        const data = getDisplayData();
+        var data = getDisplayData();
 
-        let html = '<thead><tr>';
-        html += '<th>Period</th><th>CP ROs</th><th>Cost of Goods</th><th>Revenue</th>';
-        html += '<th>Gross Profit</th><th>Gross Margin</th><th>Rebate Owed</th>';
+        var html = '<thead><tr>';
+        html += '<th>Period</th><th>ROs</th><th>Retail Total</th><th>Per-RO Total</th>';
+        html += '<th>Difference</th>';
         html += '</tr></thead><tbody>';
 
-        let totals = { ros: 0, cost: 0, revenue: 0, grossProfit: 0, rebate: 0 };
+        var totals = { roCount: 0, retailTotal: 0, perROTotal: 0, difference: 0, ourCostTotal: 0 };
 
-        data.forEach(d => {
-            const r = calcRow(d, rate);
-            totals.ros += r.ros;
-            totals.cost += r.cost;
-            totals.revenue += r.revenue;
-            totals.grossProfit += r.grossProfit;
-            totals.rebate += r.rebate;
+        data.forEach(function(d) {
+            totals.roCount += d.roCount;
+            totals.retailTotal += d.retailTotal;
+            totals.perROTotal += d.perROTotal;
+            totals.difference += d.difference;
+            totals.ourCostTotal += d.ourCostTotal;
 
-            const marginClass = r.margin > 50 ? 'margin-over' : r.margin >= 48 ? 'margin-at' : 'margin-under';
-            const rebateClass = r.rebate > 0 ? 'rebate-positive' : 'rebate-zero';
+            var diffClass = d.difference > 0 ? 'difference-positive' : d.difference < 0 ? 'difference-negative' : '';
 
             html += '<tr>';
-            html += `<td>${r.period}</td>`;
-            html += `<td>${r.ros.toLocaleString()}</td>`;
-            html += `<td>${fmt(r.cost)}</td>`;
-            html += `<td>${fmt(r.revenue)}</td>`;
-            html += `<td>${fmt(r.grossProfit)}</td>`;
-            html += `<td><span class="${marginClass}">${fmtPct(r.margin)}</span></td>`;
-            html += `<td class="${rebateClass}">${r.rebate > 0 ? fmt(r.rebate) : '$0.00'}</td>`;
+            html += '<td>' + d.period + '</td>';
+            html += '<td>' + d.roCount.toLocaleString() + '</td>';
+            html += '<td>' + fmt(d.retailTotal) + '</td>';
+            html += '<td>' + fmt(d.perROTotal) + '</td>';
+            html += '<td class="' + diffClass + '">' + fmtDiff(d.difference) + '</td>';
             html += '</tr>';
         });
 
         if (data.length > 1) {
-            const totalMargin = totals.revenue > 0 ? (totals.grossProfit / totals.revenue) * 100 : 0;
-            const marginClass = totalMargin > 50 ? 'margin-over' : totalMargin >= 48 ? 'margin-at' : 'margin-under';
+            var diffClass = totals.difference > 0 ? 'difference-positive' : totals.difference < 0 ? 'difference-negative' : '';
             html += '<tr class="total-row">';
-            html += `<td>TOTAL</td>`;
-            html += `<td>${totals.ros.toLocaleString()}</td>`;
-            html += `<td>${fmt(totals.cost)}</td>`;
-            html += `<td>${fmt(totals.revenue)}</td>`;
-            html += `<td>${fmt(totals.grossProfit)}</td>`;
-            html += `<td><span class="${marginClass}">${fmtPct(totalMargin)}</span></td>`;
-            html += `<td class="${totals.rebate > 0 ? 'rebate-positive' : 'rebate-zero'}">${totals.rebate > 0 ? fmt(totals.rebate) : '$0.00'}</td>`;
+            html += '<td>TOTAL</td>';
+            html += '<td>' + totals.roCount.toLocaleString() + '</td>';
+            html += '<td>' + fmt(totals.retailTotal) + '</td>';
+            html += '<td>' + fmt(totals.perROTotal) + '</td>';
+            html += '<td class="' + diffClass + '">' + fmtDiff(totals.difference) + '</td>';
             html += '</tr>';
         }
 
@@ -789,69 +860,124 @@
     }
 
     function renderChart() {
-        const rate = getRate();
-        const data = getDisplayData();
-        const container = document.getElementById('chartContainer');
+        var data = getDisplayData();
+        var container = document.getElementById('chartContainer');
 
-        const rows = data.map(d => calcRow(d, rate));
-        const maxVal = Math.max(...rows.map(r => Math.max(r.cost, r.revenue))) * 1.1;
+        if (data.length === 0) { container.innerHTML = ''; return; }
 
-        let html = '';
+        var maxVal = Math.max.apply(null, data.map(function(d) { return Math.max(d.retailTotal, d.perROTotal); })) * 1.1;
+        if (maxVal === 0) { container.innerHTML = ''; return; }
+
+        var html = '';
 
         // Y-axis
         html += '<div class="chart-y-axis">';
-        for (let i = 4; i >= 0; i--) {
-            const val = (maxVal / 4) * i;
-            html += `<div class="chart-y-label">$${(val/1000).toFixed(1)}k</div>`;
+        for (var i = 4; i >= 0; i--) {
+            var val = (maxVal / 4) * i;
+            html += '<div class="chart-y-label">$' + (val/1000).toFixed(1) + 'k</div>';
         }
         html += '</div>';
 
-        rows.forEach(r => {
-            const costHeight = (r.cost / maxVal) * 260;
-            const revHeight = (r.revenue / maxVal) * 260;
-            const targetHeight = (r.cost * 2 / maxVal) * 260; // 50% margin = revenue needs to be 2× cost
-            const label = currentView === 'monthly' ? r.period.replace(' 2025', '').substring(0, 3) : r.period;
+        data.forEach(function(d) {
+            var retailHeight = (d.retailTotal / maxVal) * 260;
+            var perROHeight = (d.perROTotal / maxVal) * 260;
+            var label = currentView === 'monthly'
+                ? d.period.replace(/\s*\d{4}/, '').substring(0, 3)
+                : d.period;
 
-            html += `<div class="chart-bar-group">
-                <div class="chart-bars">
-                    <div class="chart-bar cost" style="height:${costHeight}px" title="Cost: ${fmt(r.cost)}"></div>
-                    <div class="chart-bar revenue" style="height:${revHeight}px" title="Revenue: ${fmt(r.revenue)}"></div>
-                    <div class="margin-line" style="bottom:${targetHeight}px" title="50% Margin Target: ${fmt(r.cost * 2)}"></div>
-                </div>
-                <div class="chart-label">${label}</div>
-            </div>`;
+            html += '<div class="chart-bar-group">';
+            html += '<div class="chart-bars">';
+            html += '<div class="chart-bar retail" style="height:' + retailHeight + 'px" title="Retail: ' + fmt(d.retailTotal) + '"></div>';
+            html += '<div class="chart-bar perro" style="height:' + perROHeight + 'px" title="Per-RO: ' + fmt(d.perROTotal) + '"></div>';
+            html += '</div>';
+            html += '<div class="chart-label">' + label + '</div>';
+            html += '</div>';
         });
 
         container.innerHTML = html;
     }
 
     function renderTopItems() {
-        if (!topItems.length) {
-            document.getElementById('topItemsContainer').innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No items data loaded.</p>';
+        if (!itemData.length) {
+            document.getElementById('topItemsContainer').innerHTML =
+                '<p style="color:#888;text-align:center;padding:20px;">No items data loaded.</p>';
             return;
         }
-        const maxCost = topItems[0].cost;
-        let html = '';
-        topItems.forEach((item, i) => {
-            const pct = (item.cost / maxCost) * 100;
-            html += `<div class="item-bar-row">
-                <div class="item-rank">${i + 1}</div>
-                <div class="item-name" title="${item.desc}">${item.desc}</div>
-                <div class="item-bar-container">
-                    <div class="item-bar-fill" style="width:${pct}%"></div>
-                </div>
-                <div class="item-cost">${fmt(item.cost)}</div>
-            </div>`;
+
+        // Aggregate items across all months by description
+        var itemAgg = {};
+        itemData.forEach(function(item) {
+            var key = item.description;
+            if (!itemAgg[key]) {
+                itemAgg[key] = { desc: item.description, retailTotal: 0, costTotal: 0 };
+            }
+            itemAgg[key].retailTotal += item.retailTotal;
+            itemAgg[key].costTotal += item.costTotal;
+        });
+
+        var sorted = Object.values(itemAgg)
+            .sort(function(a, b) { return b.retailTotal - a.retailTotal; })
+            .slice(0, 15);
+
+        if (sorted.length === 0) return;
+
+        var maxVal = sorted[0].retailTotal;
+        var html = '';
+        sorted.forEach(function(item, i) {
+            var pct = maxVal > 0 ? (item.retailTotal / maxVal) * 100 : 0;
+            html += '<div class="item-bar-row">';
+            html += '<div class="item-rank">' + (i + 1) + '</div>';
+            html += '<div class="item-name" title="' + item.desc + '">' + item.desc + '</div>';
+            html += '<div class="item-bar-container">';
+            html += '<div class="item-bar-fill" style="width:' + pct + '%"></div>';
+            html += '</div>';
+            html += '<div class="item-cost">' + fmt(item.retailTotal) + '</div>';
+            html += '</div>';
         });
         document.getElementById('topItemsContainer').innerHTML = html;
     }
 
-    function updateBreakevenNote() {
-        const totalCost = monthlyData.reduce((s, m) => s + m.cost, 0);
-        const totalROs = monthlyData.reduce((s, m) => s + m.ros, 0);
-        const breakevenRate = totalROs > 0 ? (totalCost / 0.50) / totalROs : 0;
-        document.getElementById('breakevenNote').innerHTML =
-            '50% margin breakeven rate for this account: <strong>' + fmt(breakevenRate) + ' / RO</strong>';
+    function updateSuggestedRate() {
+        var rate = calcSuggestedRate();
+        document.getElementById('suggestedRateValue').textContent = fmt(rate) + ' / RO';
+    }
+
+    function renderROEntryFields() {
+        var months = getMonthsInData();
+        var section = document.getElementById('roEntrySection');
+        var grid = document.getElementById('roEntryGrid');
+
+        if (months.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+        section.style.display = 'block';
+
+        var html = '';
+        months.forEach(function(month) {
+            var val = roData[month] || '';
+            html += '<div class="ro-entry-item">';
+            html += '<label>' + month + '</label>';
+            html += '<input type="number" min="0" step="1" value="' + val + '"';
+            html += ' data-month="' + month + '"';
+            html += ' placeholder="ROs"';
+            html += ' class="ro-month-input">';
+            html += '</div>';
+        });
+        grid.innerHTML = html;
+
+        // Wire up change events
+        grid.querySelectorAll('.ro-month-input').forEach(function(input) {
+            input.addEventListener('input', function() {
+                var month = this.dataset.month;
+                var val = parseInt(this.value) || 0;
+                roData[month] = val;
+                renderAll();
+            });
+        });
+
+        document.getElementById('roSourceLabel').textContent =
+            roDataSource === 'file' ? 'Loaded from file \u2014 edit to override' : 'Manual entry \u2014 enter RO counts for each month';
     }
 
     function renderAll() {
@@ -859,59 +985,63 @@
         renderTable();
         renderChart();
         renderTopItems();
-        updateBreakevenNote();
+        updateSuggestedRate();
     }
 
     function setView(view) {
         currentView = view;
-        document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-toggle button').forEach(function(b) { b.classList.remove('active'); });
         event.target.classList.add('active');
         renderAll();
     }
 
     document.getElementById('roRate').addEventListener('input', renderAll);
 
-    // ===== FILE IMPORT: AUTO-DETECTION PATTERNS =====
-    const MONTHLY_FIELD_PATTERNS = {
+    // ===== FILE IMPORT: COLUMN DETECTION PATTERNS =====
+    var ITEM_FIELD_PATTERNS = {
+        description: {
+            patterns: ['description', 'desc', 'itemdescription', 'itemdesc', 'item',
+                       'name', 'itemname', 'productname', 'product', 'partdescription',
+                       'partname', 'part'],
+            required: true
+        },
+        unitsSold: {
+            patterns: ['unitssold', 'units', 'qty', 'quantity', 'count', 'sold',
+                       'itemssold', 'qtyshipped', 'shipqty', 'volume', 'unitcount'],
+            required: true
+        },
+        retailPrice: {
+            patterns: ['retailprice', 'retail', 'listprice', 'list', 'price',
+                       'unitprice', 'sellprice', 'sellingprice', 'msrp',
+                       'retailpriceperunit', 'saleprice'],
+            required: true
+        },
+        ourCost: {
+            patterns: ['ourcost', 'cost', 'unitcost', 'costperunit', 'suppliercost',
+                       'purchasecost', 'buycost', 'wholesale', 'costprice',
+                       'vendorcost', 'acquisitioncost'],
+            required: true
+        },
         month: {
             patterns: ['month', 'period', 'date', 'mo', 'monthyear', 'monthname'],
             required: true
         },
-        cost: {
-            patterns: ['cost', 'costofgoods', 'cogs', 'totalcost', 'costofgoodssold',
-                       'cogstotal', 'supplycost', 'goodscost', 'amount'],
-            required: true
-        },
-        qty: {
-            patterns: ['qty', 'quantity', 'itemcount', 'items', 'units',
-                       'itemsshipped', 'qtyshipped', 'shipqty', 'count'],
-            required: false
-        },
         ros: {
-            patterns: ['ros', 'repairorders', 'cpro', 'cpros', 'rocount',
-                       'repairorder', 'orders', 'roqty', 'numberofros'],
-            required: true
-        },
-        quarter: {
-            patterns: ['quarter', 'qtr', 'q'],
+            patterns: ['ros', 'rocount', 'repairorders', 'cpro', 'cpros',
+                       'repairorder', 'orders', 'roqty', 'numberofros', 'totalros'],
             required: false
         }
     };
 
-    const TOP_ITEMS_FIELD_PATTERNS = {
-        code: {
-            patterns: ['code', 'itemcode', 'partcode', 'sku', 'partno',
-                       'partnumber', 'itemno', 'itemnumber', 'productcode', 'id'],
-            required: false
-        },
-        desc: {
-            patterns: ['desc', 'description', 'itemdescription', 'itemdesc',
-                       'name', 'itemname', 'productname', 'product', 'item'],
+    var RO_FIELD_PATTERNS = {
+        month: {
+            patterns: ['month', 'period', 'date', 'mo', 'monthyear'],
             required: true
         },
-        cost: {
-            patterns: ['cost', 'totalcost', 'annualcost', 'amount', 'total',
-                       'price', 'value', 'spend', 'dollartotal'],
+        roCount: {
+            patterns: ['ros', 'rocount', 'repairorders', 'cpro', 'cpros',
+                       'repairorder', 'orders', 'roqty', 'numberofros',
+                       'count', 'rocount', 'totalros'],
             required: true
         }
     };
@@ -924,32 +1054,25 @@
     function parseNumber(val) {
         if (typeof val === 'number') return val;
         if (!val && val !== 0) return 0;
-        const cleaned = String(val).replace(/[$,\s]/g, '');
+        var cleaned = String(val).replace(/[$,\s]/g, '');
         return parseFloat(cleaned);
-    }
-
-    function inferQuarter(monthStr) {
-        const lower = monthStr.toLowerCase();
-        if (/jan|feb|mar/.test(lower)) return 'Q1';
-        if (/apr|may|jun/.test(lower)) return 'Q2';
-        if (/jul|aug|sep/.test(lower)) return 'Q3';
-        if (/oct|nov|dec/.test(lower)) return 'Q4';
-        return '';
     }
 
     // ===== FILE IMPORT: COLUMN DETECTION =====
     function scoreMapping(headers, fieldPatterns) {
-        const mapping = {};
-        let score = 0;
-        let requiredMet = true;
-        const usedHeaders = new Set();
+        var mapping = {};
+        var score = 0;
+        var requiredMet = true;
+        var usedHeaders = new Set();
 
         // Pass 1: exact canonical matches
-        for (const [field, config] of Object.entries(fieldPatterns)) {
-            for (const header of headers) {
+        for (var field in fieldPatterns) {
+            var config = fieldPatterns[field];
+            for (var h = 0; h < headers.length; h++) {
+                var header = headers[h];
                 if (usedHeaders.has(header)) continue;
-                const canon = canonicalize(header);
-                if (config.patterns.includes(canon)) {
+                var canon = canonicalize(header);
+                if (config.patterns.indexOf(canon) >= 0) {
                     mapping[field] = header;
                     usedHeaders.add(header);
                     score += 10;
@@ -959,12 +1082,14 @@
         }
 
         // Pass 2: substring/contains matches for unmapped fields
-        for (const [field, config] of Object.entries(fieldPatterns)) {
+        for (var field in fieldPatterns) {
             if (mapping[field]) continue;
-            for (const header of headers) {
+            var config = fieldPatterns[field];
+            for (var h = 0; h < headers.length; h++) {
+                var header = headers[h];
                 if (usedHeaders.has(header)) continue;
-                const canon = canonicalize(header);
-                const match = config.patterns.some(p => canon.includes(p) || p.includes(canon));
+                var canon = canonicalize(header);
+                var match = config.patterns.some(function(p) { return canon.includes(p) || p.includes(canon); });
                 if (match) {
                     mapping[field] = header;
                     usedHeaders.add(header);
@@ -974,107 +1099,136 @@
             }
         }
 
-        for (const [field, config] of Object.entries(fieldPatterns)) {
-            if (config.required && !mapping[field]) requiredMet = false;
+        for (var field in fieldPatterns) {
+            if (fieldPatterns[field].required && !mapping[field]) requiredMet = false;
         }
 
-        return { mapping, score, requiredMet };
+        return { mapping: mapping, score: score, requiredMet: requiredMet };
     }
 
     function detectSheetType(jsonRows) {
         if (jsonRows.length === 0) return { type: 'unknown', mapping: {} };
 
-        const headers = Object.keys(jsonRows[0]);
-        const monthlyScore = scoreMapping(headers, MONTHLY_FIELD_PATTERNS);
-        const topItemsScore = scoreMapping(headers, TOP_ITEMS_FIELD_PATTERNS);
+        var headers = Object.keys(jsonRows[0]);
+        var itemScore = scoreMapping(headers, ITEM_FIELD_PATTERNS);
+        var roScore = scoreMapping(headers, RO_FIELD_PATTERNS);
 
-        // Heuristic: check for month-like values
-        const hasMonthValues = jsonRows.some(row => {
-            const firstVal = String(Object.values(row)[0]).toLowerCase();
+        // Heuristic: item data sheets have many rows with diverse descriptions
+        // RO data sheets have few rows (one per month) with month-like values
+        var hasMonthValues = jsonRows.some(function(row) {
+            var firstVal = String(Object.values(row)[0]).toLowerCase();
             return /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/.test(firstVal);
         });
-        if (hasMonthValues) monthlyScore.score += 20;
 
-        if (monthlyScore.score > topItemsScore.score && monthlyScore.requiredMet) {
-            return { type: 'monthly', mapping: monthlyScore.mapping };
-        } else if (topItemsScore.requiredMet) {
-            return { type: 'topItems', mapping: topItemsScore.mapping };
+        // If both could match, prefer items if it has more required fields matched
+        // and more rows (item data is typically many rows vs 12 for RO)
+        if (itemScore.requiredMet && roScore.requiredMet) {
+            // If few rows and month-like values, likely RO data
+            if (jsonRows.length <= 14 && hasMonthValues && headers.length <= 4) {
+                return { type: 'roData', mapping: roScore.mapping };
+            }
+            // Otherwise prefer item data if score is higher or equal
+            if (itemScore.score >= roScore.score) {
+                return { type: 'items', mapping: itemScore.mapping };
+            }
+            return { type: 'roData', mapping: roScore.mapping };
+        }
+
+        if (itemScore.requiredMet) {
+            return { type: 'items', mapping: itemScore.mapping };
+        }
+        if (roScore.requiredMet) {
+            return { type: 'roData', mapping: roScore.mapping };
         }
 
         return { type: 'unknown', mapping: {} };
     }
 
     // ===== FILE IMPORT: DATA PARSING =====
-    function parseMonthlyData(jsonRows, mapping) {
-        const parsed = [];
-        const errors = [];
+    function parseItemData(jsonRows, mapping) {
+        var parsed = [];
+        var errors = [];
+        var extractedROs = {};  // Extract RO counts from item rows if column exists
 
-        jsonRows.forEach((row, i) => {
-            const monthRaw = String(row[mapping.month] || '').trim();
-            const costRaw = row[mapping.cost];
-            const rosRaw = row[mapping.ros];
-            const qtyRaw = mapping.qty ? row[mapping.qty] : 0;
-            const quarterRaw = mapping.quarter ? row[mapping.quarter] : null;
+        jsonRows.forEach(function(row, i) {
+            var desc = String(row[mapping.description] || '').trim();
+            var unitsRaw = row[mapping.unitsSold];
+            var retailRaw = row[mapping.retailPrice];
+            var costRaw = row[mapping.ourCost];
+            var monthRaw = String(row[mapping.month] || '').trim();
 
-            if (!monthRaw && !costRaw) return;
+            if (!desc && !unitsRaw) return; // skip empty rows
 
-            const cost = parseNumber(costRaw);
-            const ros = parseNumber(rosRaw);
-            const qty = parseNumber(qtyRaw);
+            var unitsSold = parseNumber(unitsRaw);
+            var retailPrice = parseNumber(retailRaw);
+            var ourCost = parseNumber(costRaw);
+            var month = normalizeMonth(monthRaw);
 
-            if (isNaN(cost)) { errors.push('Row ' + (i + 2) + ': invalid cost "' + costRaw + '"'); return; }
-            if (isNaN(ros))  { errors.push('Row ' + (i + 2) + ': invalid RO count "' + rosRaw + '"'); return; }
+            if (isNaN(unitsSold)) { errors.push('Row ' + (i+2) + ': invalid units "' + unitsRaw + '"'); return; }
+            if (isNaN(retailPrice)) { errors.push('Row ' + (i+2) + ': invalid retail price "' + retailRaw + '"'); return; }
+            if (isNaN(ourCost)) { errors.push('Row ' + (i+2) + ': invalid cost "' + costRaw + '"'); return; }
+
+            // Extract RO count if column exists (same value repeated per month)
+            if (mapping.ros && row[mapping.ros] !== undefined && row[mapping.ros] !== '') {
+                var roVal = parseNumber(row[mapping.ros]);
+                if (!isNaN(roVal) && roVal > 0 && month) {
+                    extractedROs[month] = Math.round(roVal);
+                }
+            }
 
             parsed.push({
-                month: monthRaw,
-                cost: cost,
-                qty: qty,
-                ros: ros,
-                quarter: quarterRaw || inferQuarter(monthRaw)
+                description: desc,
+                unitsSold: unitsSold,
+                retailPrice: retailPrice,
+                ourCost: ourCost,
+                month: month,
+                quarter: inferQuarter(month),
+                retailTotal: unitsSold * retailPrice,
+                costTotal: unitsSold * ourCost
             });
         });
 
-        return { data: parsed, errors };
+        return { data: parsed, errors: errors, extractedROs: extractedROs };
     }
 
-    function parseTopItemsData(jsonRows, mapping) {
-        const parsed = [];
-        const errors = [];
+    function parseROData(jsonRows, mapping) {
+        var parsed = {};
+        var errors = [];
 
-        jsonRows.forEach((row, i) => {
-            const desc = String(row[mapping.desc] || '').trim();
-            const costRaw = row[mapping.cost];
-            const code = mapping.code ? String(row[mapping.code] || '').trim() : '';
+        jsonRows.forEach(function(row, i) {
+            var monthRaw = String(row[mapping.month] || '').trim();
+            var roRaw = row[mapping.roCount];
 
-            if (!desc && !costRaw) return;
+            if (!monthRaw) return;
 
-            const cost = parseNumber(costRaw);
-            if (isNaN(cost) || cost <= 0) {
-                errors.push('Row ' + (i + 2) + ': invalid cost "' + costRaw + '" for item "' + desc + '"');
+            var roCount = parseNumber(roRaw);
+            if (isNaN(roCount) || roCount < 0) {
+                errors.push('Row ' + (i+2) + ': invalid RO count "' + roRaw + '"');
                 return;
             }
 
-            parsed.push({ code, desc, cost });
+            var month = normalizeMonth(monthRaw);
+            parsed[month] = Math.round(roCount);
         });
 
-        parsed.sort((a, b) => b.cost - a.cost);
-        return { data: parsed, errors };
+        return { data: parsed, errors: errors };
     }
 
     // ===== FILE IMPORT: FEEDBACK UI =====
     function showFeedback(type, message) {
-        const el = document.getElementById('importFeedback');
+        var el = document.getElementById('importFeedback');
         el.className = 'import-feedback ' + type;
         el.innerHTML = message;
         el.style.display = 'block';
     }
 
     function buildMappingTable(mapping, patterns) {
-        let html = '<table style="margin:8px 0;font-size:0.9em;border-collapse:collapse;">';
-        for (const [field, config] of Object.entries(patterns)) {
-            const mapped = mapping[field];
-            const icon = mapped ? '&#10003;' : (config.required ? '&#10007;' : '&mdash;');
-            const color = mapped ? '#059669' : (config.required ? '#dc2626' : '#888');
+        var html = '<table style="margin:8px 0;font-size:0.9em;border-collapse:collapse;">';
+        for (var field in patterns) {
+            var config = patterns[field];
+            var mapped = mapping[field];
+            var icon = mapped ? '&#10003;' : (config.required ? '&#10007;' : '&mdash;');
+            var color = mapped ? '#059669' : (config.required ? '#dc2626' : '#888');
             html += '<tr>';
             html += '<td style="padding:2px 12px 2px 0;color:' + color + '">' + icon + '</td>';
             html += '<td style="padding:2px 12px 2px 0;font-weight:600">' + field + '</td>';
@@ -1085,243 +1239,25 @@
         return html;
     }
 
-    // ===== FILE IMPORT: PIVOT TABLE DETECTION =====
-    // Handles spreadsheets where months are columns (3 cols per month: Cost, Qty, CP RO)
-    // Row 1: month names across columns, Row 2: sub-headers, Row 3: totals, Rows 4+: items
-    function tryParsePivotSheet(sheet) {
-        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
-        const colCount = range.e.c - range.s.c + 1;
-        const rowCount = range.e.r - range.s.r + 1;
-        if (colCount < 6 || rowCount < 4) return null;
-
-        // Helper to get cell value
-        function cell(r, c) {
-            const addr = XLSX.utils.encode_cell({ r: r, c: c });
-            const cl = sheet[addr];
-            return cl ? cl.v : null;
-        }
-
-        // Scan first two rows for month names (handles merged headers)
-        const monthPattern = /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i;
-        const monthColumns = []; // { col, name }
-        for (let r = 0; r <= 1; r++) {
-            for (let c = 0; c <= range.e.c; c++) {
-                const val = cell(r, c);
-                if (val && monthPattern.test(String(val))) {
-                    const nameStr = String(val).trim();
-                    // Deduplicate by both column AND month name (merged cells can
-                    // cause SheetJS to repeat the same value in adjacent columns)
-                    if (!monthColumns.some(m => m.col === c || m.name === nameStr)) {
-                        monthColumns.push({ col: c, name: nameStr, headerRow: r });
-                    }
-                }
-            }
-        }
-
-        if (monthColumns.length < 2) return null; // Not a pivot layout
-
-        // Determine the sub-header row (the row with Cost/Quantity/CP RO labels)
-        // It's typically the row after the month names, or the same row if months are in row 0
-        const subHeaderRow = monthColumns[0].headerRow === 0 ? 1 : 2;
-
-        // Read sub-headers
-        const subHeaders = [];
-        for (let c = 0; c <= range.e.c; c++) {
-            const val = cell(subHeaderRow, c);
-            subHeaders.push(val ? String(val).toLowerCase().trim() : '');
-        }
-
-        // For each month column, find the Cost, Qty, and CP RO sub-columns
-        const monthBlocks = [];
-        const seenMonthNames = new Set();
-        monthColumns.forEach(mc => {
-            // Normalize month name for dedup (e.g. "Dec 2025" → "dec 2025")
-            const normName = mc.name.toLowerCase().trim();
-            if (seenMonthNames.has(normName)) return;
-            const block = { name: mc.name, costCol: -1, qtyCol: -1, roCol: -1 };
-            // Search from the month's column through the next few columns
-            for (let c = mc.col; c < Math.min(mc.col + 5, range.e.c + 1); c++) {
-                const sh = subHeaders[c];
-                if (/cost/i.test(sh) && block.costCol < 0) block.costCol = c;
-                else if (/qty|quantity/i.test(sh) && block.qtyCol < 0) block.qtyCol = c;
-                else if (/cp\s*ro|^ro$/i.test(sh) && block.roCol < 0) block.roCol = c;
-            }
-            if (block.costCol >= 0 && block.roCol >= 0) {
-                seenMonthNames.add(normName);
-                monthBlocks.push(block);
-            }
-        });
-
-        if (monthBlocks.length < 2) return null;
-
-        // Find Code and Description columns from the sub-header row
-        let codeCol = -1, descCol = -1;
-        for (let c = 0; c <= Math.min(3, range.e.c); c++) {
-            const val = cell(subHeaderRow, c);
-            if (val) {
-                const lv = String(val).toLowerCase().trim();
-                if (/code|sku|part/i.test(lv) && codeCol < 0) codeCol = c;
-                if (/desc|description/i.test(lv) && descCol < 0) descCol = c;
-            }
-        }
-        // Fallback: assume col 0 = code, col 1 = description
-        if (codeCol < 0) codeCol = 0;
-        if (descCol < 0) descCol = 1;
-
-        // Find the total row by looking for "TOTAL" in the first few columns
-        let totalRowIdx = -1;
-        for (let r = subHeaderRow + 1; r <= Math.min(subHeaderRow + 4, range.e.r); r++) {
-            for (let c = 0; c <= Math.min(1, range.e.c); c++) {
-                const val = cell(r, c);
-                if (val && String(val).toUpperCase().trim() === 'TOTAL') {
-                    totalRowIdx = r;
-                    break;
-                }
-            }
-            if (totalRowIdx >= 0) break;
-        }
-
-        // Extract monthly data from the total row
-        const monthlyParsed = [];
-        if (totalRowIdx >= 0) {
-            monthBlocks.forEach(mb => {
-                const cost = parseNumber(cell(totalRowIdx, mb.costCol));
-                const qty = mb.qtyCol >= 0 ? parseNumber(cell(totalRowIdx, mb.qtyCol)) : 0;
-                const ros = parseNumber(cell(totalRowIdx, mb.roCol));
-                if (!isNaN(cost) && !isNaN(ros) && ros > 0) {
-                    monthlyParsed.push({
-                        month: mb.name,
-                        cost: cost,
-                        qty: qty,
-                        ros: ros,
-                        quarter: inferQuarter(mb.name)
-                    });
-                }
-            });
-        }
-
-        // Deduplicate monthly data by month name (final safety net)
-        const seenMonths = new Set();
-        const dedupedMonthly = [];
-        monthlyParsed.forEach(entry => {
-            const key = entry.month.toLowerCase().trim();
-            if (!seenMonths.has(key)) {
-                seenMonths.add(key);
-                dedupedMonthly.push(entry);
-            }
-        });
-        monthlyParsed.length = 0;
-        dedupedMonthly.forEach(e => monthlyParsed.push(e));
-
-        // Sort months chronologically
-        const monthOrder = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-        monthlyParsed.sort((a, b) => {
-            const ai = monthOrder.findIndex(m => a.month.toLowerCase().includes(m));
-            const bi = monthOrder.findIndex(m => b.month.toLowerCase().includes(m));
-            return ai - bi;
-        });
-
-        // Extract top items from item rows (find the "Total" cost column)
-        let totalCostCol = -1;
-        // Look for a "Total" header in the header rows with a "Cost" sub-header
-        for (let r = 0; r <= Math.min(1, range.e.r); r++) {
-            for (let c = 0; c <= range.e.c; c++) {
-                const hdr = cell(r, c);
-                if (hdr && String(hdr).toLowerCase().trim() === 'total') {
-                    // Check if this column or next few have "Cost" sub-header
-                    for (let sc = c; sc < Math.min(c + 4, range.e.c + 1); sc++) {
-                        if (subHeaders[sc] && /cost/i.test(subHeaders[sc])) {
-                            totalCostCol = sc;
-                            break;
-                        }
-                    }
-                    if (totalCostCol >= 0) break;
-                }
-            }
-            if (totalCostCol >= 0) break;
-        }
-
-        const topItemsParsed = [];
-        const itemStartRow = (totalRowIdx >= 0 ? totalRowIdx + 1 : 3);
-        if (totalCostCol >= 0) {
-            for (let r = itemStartRow; r <= range.e.r; r++) {
-                const code = String(cell(r, codeCol) || '').trim();
-                const desc = String(cell(r, descCol) || '').trim();
-                const cost = parseNumber(cell(r, totalCostCol));
-                if ((!code && !desc) || isNaN(cost) || cost <= 0) continue;
-                topItemsParsed.push({ code, desc, cost });
-            }
-            topItemsParsed.sort((a, b) => b.cost - a.cost);
-        }
-
-        if (monthlyParsed.length === 0 && topItemsParsed.length === 0) return null;
-
-        return {
-            monthly: monthlyParsed.length > 0 ? { data: monthlyParsed, errors: [] } : null,
-            topItems: topItemsParsed.length > 0 ? { data: topItemsParsed, errors: [] } : null,
-            monthCount: monthlyParsed.length,
-            itemCount: topItemsParsed.length
-        };
-    }
-
     // ===== FILE IMPORT: ORCHESTRATION =====
     function processWorkbook(workbook, filename) {
-        const results = { monthly: null, topItems: null, warnings: [], monthlyMapping: {}, topItemsMapping: {} };
+        var results = { items: null, roData: null, warnings: [], itemsMapping: {}, roMapping: {} };
 
-        // First, try pivot table detection on each sheet
-        let pivotFound = false;
-        for (const name of workbook.SheetNames) {
-            const sheet = workbook.Sheets[name];
-            const pivotResult = tryParsePivotSheet(sheet);
-            if (pivotResult) {
-                if (pivotResult.monthly) results.monthly = pivotResult.monthly;
-                if (pivotResult.topItems) results.topItems = pivotResult.topItems;
-                results.pivotDetected = true;
-                pivotFound = true;
-                break;
-            }
-        }
+        // Iterate sheets looking for item data and RO data
+        for (var s = 0; s < workbook.SheetNames.length; s++) {
+            var name = workbook.SheetNames[s];
+            var sheet = workbook.Sheets[name];
+            var json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            if (json.length === 0) continue;
 
-        // If pivot detection didn't work, fall back to standard row-based detection
-        if (!pivotFound) {
-            if (workbook.SheetNames.length >= 2) {
-                workbook.SheetNames.forEach(name => {
-                    const sheet = workbook.Sheets[name];
-                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-                    if (json.length === 0) return;
+            var detection = detectSheetType(json);
 
-                    const detection = detectSheetType(json);
-                    if (detection.type === 'monthly' && !results.monthly) {
-                        results.monthly = parseMonthlyData(json, detection.mapping);
-                        results.monthlyMapping = detection.mapping;
-                    } else if (detection.type === 'topItems' && !results.topItems) {
-                        results.topItems = parseTopItemsData(json, detection.mapping);
-                        results.topItemsMapping = detection.mapping;
-                    }
-                });
-            } else {
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-
-                if (json.length === 0) {
-                    showFeedback('error', 'File contains no data rows.');
-                    return;
-                }
-
-                const detection = detectSheetType(json);
-                if (detection.type === 'monthly') {
-                    results.monthly = parseMonthlyData(json, detection.mapping);
-                    results.monthlyMapping = detection.mapping;
-                } else if (detection.type === 'topItems') {
-                    results.topItems = parseTopItemsData(json, detection.mapping);
-                    results.topItemsMapping = detection.mapping;
-                } else {
-                    showFeedback('error',
-                        'Could not auto-detect columns in "' + filename + '".<br><br>' +
-                        '<strong>For monthly data</strong>, expected headers like: Month, Cost, ROs<br>' +
-                        '<strong>For top items</strong>, expected headers like: Description, Cost');
-                    return;
-                }
+            if (detection.type === 'items' && !results.items) {
+                results.items = parseItemData(json, detection.mapping);
+                results.itemsMapping = detection.mapping;
+            } else if (detection.type === 'roData' && !results.roData) {
+                results.roData = parseROData(json, detection.mapping);
+                results.roMapping = detection.mapping;
             }
         }
 
@@ -1329,64 +1265,73 @@
     }
 
     function applyImportedData(results, filename) {
-        let hasData = false;
-        let html = '<strong>Imported: ' + filename + '</strong>';
+        var hasData = false;
+        var html = '<strong>Imported: ' + filename + '</strong>';
 
-        // Clear previous data before applying new import
-        monthlyData = [];
-        topItems = [];
+        // Clear previous data
+        itemData = [];
+        roData = {};
 
-        if (results.monthly && results.monthly.data.length > 0) {
-            monthlyData = results.monthly.data;
+        if (results.items && results.items.data.length > 0) {
+            itemData = results.items.data;
             hasData = true;
-            html += '<br><br><strong>Monthly Data</strong> — ' + monthlyData.length + ' periods loaded';
-            if (!results.pivotDetected) {
-                html += ':' + buildMappingTable(results.monthlyMapping, MONTHLY_FIELD_PATTERNS);
-            }
-            if (results.monthly.errors.length > 0) {
+            var months = getMonthsInData();
+            html += '<br><br><strong>Item Data</strong> \u2014 ' + itemData.length + ' rows across ' + months.length + ' months';
+            html += ':' + buildMappingTable(results.itemsMapping, ITEM_FIELD_PATTERNS);
+            if (results.items.errors.length > 0) {
                 html += '<div style="color:#92400e;margin-top:4px;"><strong>Warnings:</strong><br>';
-                results.monthly.errors.forEach(e => { html += '&bull; ' + e + '<br>'; });
+                results.items.errors.forEach(function(e) { html += '&bull; ' + e + '<br>'; });
                 html += '</div>';
             }
         }
 
-        if (results.topItems && results.topItems.data.length > 0) {
-            topItems = results.topItems.data;
-            hasData = true;
-            html += '<br><strong>Top Items</strong> — ' + topItems.length + ' items loaded';
-            if (!results.pivotDetected) {
-                html += ':' + buildMappingTable(results.topItemsMapping, TOP_ITEMS_FIELD_PATTERNS);
-            }
-            if (results.topItems.errors.length > 0) {
+        if (results.roData && Object.keys(results.roData.data).length > 0) {
+            roData = results.roData.data;
+            roDataSource = 'file';
+            html += '<br><strong>RO Data</strong> \u2014 ' + Object.keys(roData).length + ' months loaded';
+            html += ':' + buildMappingTable(results.roMapping, RO_FIELD_PATTERNS);
+            if (results.roData.errors.length > 0) {
                 html += '<div style="color:#92400e;margin-top:4px;"><strong>Warnings:</strong><br>';
-                results.topItems.errors.forEach(e => { html += '&bull; ' + e + '<br>'; });
+                results.roData.errors.forEach(function(e) { html += '&bull; ' + e + '<br>'; });
                 html += '</div>';
             }
+        } else if (results.items && results.items.extractedROs && Object.keys(results.items.extractedROs).length > 0) {
+            // RO counts were embedded in the item data rows
+            roData = results.items.extractedROs;
+            roDataSource = 'file';
+            html += '<br><strong>RO Data</strong> \u2014 ' + Object.keys(roData).length + ' months loaded from ROs column';
+        } else if (hasData) {
+            roDataSource = 'manual';
+            html += '<br><strong>RO Data</strong> \u2014 not found in file. Enter RO counts manually below.';
         }
 
         if (!hasData) {
-            // Restore defaults since we cleared them
-            monthlyData = DEFAULT_MONTHLY_DATA.map(d => ({...d}));
-            topItems = DEFAULT_TOP_ITEMS.map(d => ({...d}));
             showFeedback('error',
-                'No valid data found in "' + filename + '".<br><br>' +
-                '<strong>For monthly data</strong>, expected headers like: Month, Cost, ROs<br>' +
-                '<strong>For top items</strong>, expected headers like: Description, Cost');
+                'No valid item data found in "' + filename + '".<br><br>' +
+                '<strong>Expected columns like:</strong> Description, Units Sold, Retail Price, Our Cost, Month');
             return;
         }
 
+        // Auto-calculate and set suggested rate
+        var suggestedRate = calcSuggestedRate();
+        if (suggestedRate > 0) {
+            document.getElementById('roRate').value = suggestedRate.toFixed(2);
+        }
+
         // Update subtitle with customer name from filename
-        const customerName = filename.replace(/\.(csv|xlsx|xls)$/i, '').replace(/[-_]/g, ' ').trim();
+        var customerName = filename.replace(/\.(csv|xlsx|xls)$/i, '').replace(/[-_]/g, ' ').trim();
         document.getElementById('subtitleText').innerHTML = '<strong>' + customerName + '</strong>';
         document.getElementById('importStatus').textContent = '';
         showFeedback('success', html);
+
+        renderROEntryFields();
         renderAll();
     }
 
     function handleFile(file) {
-        const extension = file.name.split('.').pop().toLowerCase();
+        var extension = file.name.split('.').pop().toLowerCase();
 
-        if (!['csv', 'xlsx', 'xls'].includes(extension)) {
+        if (['csv', 'xlsx', 'xls'].indexOf(extension) < 0) {
             showFeedback('error', 'Unsupported file type. Please upload a CSV, XLSX, or XLS file.');
             return;
         }
@@ -1396,11 +1341,11 @@
             return;
         }
 
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
             try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, { type: 'array' });
                 processWorkbook(workbook, file.name);
             } catch (err) {
                 showFeedback('error', 'Failed to parse file: ' + err.message);
@@ -1409,22 +1354,16 @@
         reader.readAsArrayBuffer(file);
     }
 
-    function resetData() {
-        monthlyData = DEFAULT_MONTHLY_DATA.map(d => ({...d}));
-        topItems = DEFAULT_TOP_ITEMS.map(d => ({...d}));
-        document.getElementById('importStatus').textContent = '';
-        document.getElementById('importFeedback').style.display = 'none';
-        document.getElementById('fileInput').value = '';
-        renderAll();
-    }
-
     function clearData() {
-        monthlyData = [];
-        topItems = [];
-        document.getElementById('subtitleText').innerHTML = 'No customer loaded';
+        itemData = [];
+        roData = {};
+        roDataSource = 'manual';
+        document.getElementById('subtitleText').innerHTML = 'Upload a file to get started';
         document.getElementById('importStatus').textContent = '';
         document.getElementById('importFeedback').style.display = 'none';
         document.getElementById('fileInput').value = '';
+        document.getElementById('roEntrySection').style.display = 'none';
+        document.getElementById('roRate').value = '0.00';
         renderAll();
     }
 
@@ -1436,7 +1375,7 @@
         document.getElementById('importOverlay').classList.remove('active');
     }
 
-    // ===== FILE IMPORT: EVENT WIRING =====
+    // ===== EVENT WIRING =====
     document.getElementById('clearDataBtn').addEventListener('click', clearData);
     document.getElementById('newCustomerBtn').addEventListener('click', openImportModal);
     document.getElementById('importCloseBtn').addEventListener('click', closeImportModal);
@@ -1457,7 +1396,7 @@
         if (e.target.id !== 'browseLink') document.getElementById('fileInput').click();
     });
 
-    const dropZone = document.getElementById('dropZone');
+    var dropZone = document.getElementById('dropZone');
     dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
         dropZone.classList.add('drag-over');
@@ -1471,7 +1410,13 @@
         if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
     });
 
-    // Initial render
+    document.getElementById('useSuggestedBtn').addEventListener('click', function() {
+        var rate = calcSuggestedRate();
+        document.getElementById('roRate').value = rate.toFixed(2);
+        renderAll();
+    });
+
+    // Initial render (empty state)
     renderAll();
     </script>
 </body>
