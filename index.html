@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Per-RO Pricing Comparison</title>
+    <title>Per-RO Audit Tool</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -12,1419 +12,1462 @@
             color: #1a1a2e;
             padding: 20px;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
 
-        .logo-bar {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo-bar img {
-            max-height: 60px;
-            width: auto;
-        }
+        .logo-bar { text-align: center; margin-bottom: 20px; }
+        .logo-bar img { max-height: 60px; width: auto; }
 
         .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            display: flex; justify-content: space-between; align-items: flex-start;
             margin-bottom: 25px;
         }
-        h1 {
-            font-size: 1.8em;
-            margin-bottom: 5px;
-            color: #1a1a2e;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 0.95em;
-        }
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .new-customer-btn {
-            padding: 10px 22px;
-            background: #1a1a2e;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-        .new-customer-btn:hover { background: #2d2d4e; }
-        .new-customer-btn svg {
-            width: 18px;
-            height: 18px;
-        }
-        .clear-data-btn {
-            padding: 10px 22px;
-            background: #fff;
-            color: #dc2626;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .clear-data-btn:hover { border-color: #dc2626; background: #fef2f2; }
+        h1 { font-size: 1.8em; margin-bottom: 5px; color: #1a1a2e; }
+        .subtitle { color: #666; font-size: 0.95em; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
 
-        /* Rate Input Section */
+        .btn-primary {
+            padding: 10px 22px; background: #1a1a2e; color: #fff; border: none;
+            border-radius: 8px; font-size: 0.95em; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-primary:hover { background: #2d2d4e; }
+        .btn-primary:disabled { background: #999; cursor: not-allowed; }
+
+        .btn-secondary {
+            padding: 10px 22px; background: #fff; color: #1a1a2e; border: 2px solid #ddd;
+            border-radius: 8px; font-size: 0.95em; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-secondary:hover { border-color: #999; }
+
+        .btn-danger {
+            padding: 10px 22px; background: #fff; color: #dc2626; border: 2px solid #ddd;
+            border-radius: 8px; font-size: 0.95em; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-danger:hover { border-color: #dc2626; background: #fef2f2; }
+
+        /* Stepper */
+        .stepper {
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 30px; gap: 0;
+        }
+        .step-item {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .step-circle {
+            width: 36px; height: 36px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-weight: 700;
+            font-size: 0.9em; border: 2px solid #ddd; color: #999; background: #fff;
+            transition: all 0.3s;
+        }
+        .step-item.active .step-circle { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+        .step-item.done .step-circle { background: #059669; color: #fff; border-color: #059669; }
+        .step-label { font-size: 0.85em; font-weight: 500; color: #999; }
+        .step-item.active .step-label { color: #1a1a2e; font-weight: 600; }
+        .step-item.done .step-label { color: #059669; }
+        .step-line {
+            width: 60px; height: 2px; background: #ddd; margin: 0 8px;
+            transition: background 0.3s;
+        }
+        .step-line.done { background: #059669; }
+
+        /* Cards */
+        .card {
+            background: #fff; border-radius: 12px; padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;
+        }
+        .card h2 { font-size: 1.1em; margin-bottom: 16px; color: #333; }
+
+        /* Drop zone */
+        .drop-zone {
+            border: 2px dashed #ddd; border-radius: 8px; padding: 40px 24px;
+            text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+        }
+        .drop-zone.drag-over { border-color: #2563eb; background: #f0f4ff; }
+        .drop-zone.uploaded { border-color: #059669; background: #f0fdf4; border-style: solid; }
+        .drop-zone-content { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #666; }
+        .drop-zone-content a { color: #2563eb; font-weight: 600; text-decoration: none; }
+        .drop-zone-formats { font-size: 0.8em; color: #aaa; }
+        .upload-icon { width: 36px; height: 36px; color: #aaa; }
+        .upload-success { color: #059669; font-weight: 600; }
+
+        /* Preview table */
+        .preview-section { margin-top: 16px; }
+        .preview-table-wrap { max-height: 240px; overflow-y: auto; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+        .preview-table th {
+            background: #f9fafb; padding: 8px 12px; text-align: left; font-weight: 600;
+            color: #555; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0;
+        }
+        .preview-table td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; color: #444; }
+        .preview-table tr:last-child td { border-bottom: none; }
+
+        .mapping-table { margin: 10px 0; font-size: 0.9em; }
+        .mapping-table td { padding: 3px 12px 3px 0; }
+        .mapping-icon { font-weight: 700; }
+
+        .feedback { padding: 14px 18px; border-radius: 8px; font-size: 0.88em; line-height: 1.6; margin-top: 12px; }
+        .feedback.success { background: #f0fdf4; border: 1px solid #22c55e; color: #166534; }
+        .feedback.error { background: #fef2f2; border: 1px solid #ef4444; color: #991b1b; }
+        .feedback.warning { background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; }
+
+        /* Rate input */
         .rate-section {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            flex-wrap: wrap;
+            display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
         }
-        .rate-section label {
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-        .rate-input-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .rate-section label { font-weight: 600; font-size: 1.1em; }
+        .rate-input-group { display: flex; align-items: center; gap: 8px; }
         .rate-input-group span { font-size: 1.3em; font-weight: 600; }
-        #roRate {
-            font-size: 1.3em;
-            padding: 8px 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            width: 100px;
-            text-align: center;
-            font-weight: 600;
+        #perRORate {
+            font-size: 1.3em; padding: 8px 12px; border: 2px solid #ddd; border-radius: 8px;
+            width: 120px; text-align: center; font-weight: 600;
         }
-        #roRate:focus { outline: none; border-color: #2563eb; }
-        .rate-hint {
-            color: #888;
-            font-size: 0.85em;
-        }
-        .suggested-rate-badge {
-            background: #f0fdf4;
-            border: 2px solid #22c55e;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 0.9em;
-            color: #166534;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .use-suggested-btn {
-            padding: 5px 14px;
-            border-radius: 6px;
-            border: 1px solid #059669;
-            background: #fff;
-            color: #059669;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85em;
-            transition: all 0.2s;
-        }
-        .use-suggested-btn:hover { background: #059669; color: #fff; }
+        #perRORate:focus { outline: none; border-color: #2563eb; }
+        .rate-context { color: #666; font-size: 0.88em; margin-top: 6px; }
 
-        /* RO Entry Section */
-        .ro-entry-section {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        /* Step panels */
+        .step-panel { display: none; }
+        .step-panel.active { display: block; }
+
+        .step-actions {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0f0f0;
         }
-        .ro-entry-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+
+        /* === RESULTS === */
+        #resultsSection { display: none; }
+
+        /* Verdict banner */
+        .verdict-banner {
+            border-radius: 12px; padding: 28px 32px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
         }
-        .ro-entry-header h2 {
-            font-size: 1.1em;
-            color: #333;
+        .verdict-banner.overpaid {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #22c55e;
         }
-        .ro-entry-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
+        .verdict-banner.underpaid {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 2px solid #ef4444;
         }
-        .ro-entry-item label {
-            display: block;
-            font-size: 0.82em;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 4px;
+        .verdict-banner.balanced {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 2px solid #3b82f6;
         }
-        .ro-entry-item input {
-            width: 100%;
-            padding: 7px 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 1em;
-            text-align: center;
-            font-weight: 600;
+        .verdict-icon { font-size: 2.5em; line-height: 1; }
+        .verdict-content { flex: 1; }
+        .verdict-title { font-size: 1.3em; font-weight: 700; margin-bottom: 4px; }
+        .verdict-banner.overpaid .verdict-title { color: #166534; }
+        .verdict-banner.underpaid .verdict-title { color: #991b1b; }
+        .verdict-banner.balanced .verdict-title { color: #1e40af; }
+        .verdict-amount { font-size: 2em; font-weight: 800; line-height: 1.1; }
+        .verdict-banner.overpaid .verdict-amount { color: #059669; }
+        .verdict-banner.underpaid .verdict-amount { color: #dc2626; }
+        .verdict-banner.balanced .verdict-amount { color: #2563eb; }
+        .verdict-detail { font-size: 0.9em; color: #555; margin-top: 6px; }
+
+        .recommendation-box {
+            background: #fff; border: 2px solid #f59e0b; border-radius: 10px;
+            padding: 16px 20px; margin-top: 12px; display: inline-block;
         }
-        .ro-entry-item input:focus { border-color: #2563eb; outline: none; }
+        .recommendation-box .rec-label { font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.5px; color: #92400e; font-weight: 600; }
+        .recommendation-box .rec-value { font-size: 1.5em; font-weight: 800; color: #d97706; }
 
         /* Summary Cards */
         .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-bottom: 20px;
         }
-        .card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
+        .summary-card {
+            background: #fff; border-radius: 12px; padding: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        .card-label {
-            font-size: 0.8em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #888;
-            margin-bottom: 6px;
+        .summary-card .sc-label {
+            font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px;
+            color: #888; margin-bottom: 6px; font-weight: 500;
         }
-        .card-value {
-            font-size: 1.8em;
-            font-weight: 700;
-        }
-        .card-sub {
-            font-size: 0.85em;
-            color: #888;
-            margin-top: 4px;
-        }
-        .card-green .card-value { color: #059669; }
-        .card-red .card-value { color: #dc2626; }
-        .card-blue .card-value { color: #2563eb; }
-        .card-amber .card-value { color: #d97706; }
+        .summary-card .sc-value { font-size: 1.6em; font-weight: 700; }
+        .summary-card .sc-sub { font-size: 0.82em; color: #888; margin-top: 4px; }
+        .sc-blue .sc-value { color: #2563eb; }
+        .sc-green .sc-value { color: #059669; }
+        .sc-red .sc-value { color: #dc2626; }
+        .sc-amber .sc-value { color: #d97706; }
 
         /* View Toggle */
-        .view-toggle {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
+        .view-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
         .view-toggle button {
-            padding: 10px 24px;
-            border: 2px solid #ddd;
-            background: #fff;
-            border-radius: 8px;
-            font-size: 0.95em;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
+            padding: 10px 24px; border: 2px solid #ddd; background: #fff;
+            border-radius: 8px; font-size: 0.95em; cursor: pointer; font-weight: 500; transition: all 0.2s;
         }
-        .view-toggle button.active {
-            background: #1a1a2e;
-            color: #fff;
-            border-color: #1a1a2e;
-        }
-        .view-toggle button:hover:not(.active) {
-            border-color: #999;
-        }
+        .view-toggle button.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+        .view-toggle button:hover:not(.active) { border-color: #999; }
 
-        /* Table */
+        /* Data Table */
         .table-container {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            overflow-x: auto;
-            margin-bottom: 20px;
+            background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow-x: auto; margin-bottom: 20px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.92em;
+        table.data-table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+        .data-table thead th {
+            background: #1a1a2e; color: #fff; padding: 14px 16px; text-align: right;
+            white-space: nowrap; font-weight: 500;
         }
-        thead th {
-            background: #1a1a2e;
-            color: #fff;
-            padding: 14px 16px;
-            text-align: right;
-            white-space: nowrap;
-            font-weight: 500;
+        .data-table thead th:first-child { text-align: left; border-radius: 12px 0 0 0; }
+        .data-table thead th:last-child { border-radius: 0 12px 0 0; }
+        .data-table tbody td {
+            padding: 12px 16px; text-align: right; border-bottom: 1px solid #f0f0f0;
         }
-        thead th:first-child { text-align: left; border-radius: 12px 0 0 0; }
-        thead th:last-child { border-radius: 0 12px 0 0; }
-        tbody td {
-            padding: 12px 16px;
-            text-align: right;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        tbody td:first-child {
-            text-align: left;
-            font-weight: 600;
-        }
-        tbody tr:hover { background: #f8f9ff; }
-        tbody tr.total-row {
-            background: #f0f4ff;
-            font-weight: 700;
-        }
-        tbody tr.total-row td { border-top: 2px solid #1a1a2e; }
-
-        .difference-positive {
-            color: #dc2626;
-            font-weight: 700;
-        }
-        .difference-negative {
-            color: #059669;
-            font-weight: 700;
-        }
+        .data-table tbody td:first-child { text-align: left; font-weight: 600; }
+        .data-table tbody tr:hover { background: #f8f9ff; }
+        .data-table tbody tr.total-row { background: #f0f4ff; font-weight: 700; }
+        .data-table tbody tr.total-row td { border-top: 2px solid #1a1a2e; }
+        .diff-positive { color: #dc2626; font-weight: 700; }
+        .diff-negative { color: #059669; font-weight: 700; }
 
         /* Chart */
-        .chart-section {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-        }
-        .chart-section h2 {
-            font-size: 1.1em;
-            margin-bottom: 16px;
-            color: #333;
-        }
         .chart-container {
-            position: relative;
-            height: 300px;
-            display: flex;
-            align-items: flex-end;
-            gap: 4px;
-            padding: 0 10px 30px 50px;
+            position: relative; height: 300px; display: flex; align-items: flex-end;
+            gap: 4px; padding: 0 10px 30px 50px;
         }
-        .chart-bar-group {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-        }
-        .chart-bars {
-            display: flex;
-            gap: 2px;
-            align-items: flex-end;
-            width: 100%;
-            justify-content: center;
-            position: relative;
-        }
+        .chart-bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .chart-bars { display: flex; gap: 2px; align-items: flex-end; width: 100%; justify-content: center; }
         .chart-bar {
-            width: 45%;
-            max-width: 40px;
-            border-radius: 4px 4px 0 0;
-            transition: height 0.4s ease;
-            position: relative;
+            width: 45%; max-width: 40px; border-radius: 4px 4px 0 0; transition: height 0.4s ease;
         }
-        .chart-bar.retail { background: #3b82f6; }
+        .chart-bar.pricelist { background: #3b82f6; }
         .chart-bar.perro { background: #22c55e; }
         .chart-bar:hover { opacity: 0.8; }
-        .chart-label {
-            font-size: 0.7em;
-            color: #888;
-            margin-top: 8px;
-            text-align: center;
-        }
+        .chart-label { font-size: 0.7em; color: #888; margin-top: 8px; text-align: center; }
         .chart-y-axis {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 30px;
-            width: 50px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding-right: 8px;
+            position: absolute; left: 0; top: 0; bottom: 30px; width: 50px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            align-items: flex-end; padding-right: 8px;
         }
-        .chart-y-label {
-            font-size: 0.7em;
-            color: #999;
-        }
-        .chart-legend {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 12px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85em;
-            color: #666;
-        }
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-        }
+        .chart-y-label { font-size: 0.7em; color: #999; }
+        .chart-legend { display: flex; gap: 20px; justify-content: center; margin-top: 12px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.85em; color: #666; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
 
         /* Top Items */
-        .top-items {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-        }
-        .top-items h2 {
-            font-size: 1.1em;
-            margin-bottom: 16px;
-            color: #333;
-        }
-        .item-bar-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            gap: 10px;
-        }
-        .item-rank {
-            font-size: 0.8em;
-            color: #999;
-            width: 20px;
-            text-align: right;
-        }
-        .item-name {
-            width: 280px;
-            font-size: 0.82em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .item-bar-container {
-            flex: 1;
-            height: 22px;
-            background: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .item-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-            border-radius: 4px;
-            transition: width 0.4s ease;
-        }
-        .item-cost {
-            font-size: 0.85em;
-            font-weight: 600;
-            width: 80px;
-            text-align: right;
+        .item-bar-row { display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
+        .item-rank { font-size: 0.8em; color: #999; width: 20px; text-align: right; }
+        .item-name { width: 300px; font-size: 0.82em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-bar-container { flex: 1; height: 22px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+        .item-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 4px; transition: width 0.4s ease; }
+        .item-cost { font-size: 0.85em; font-weight: 600; width: 90px; text-align: right; }
+
+        /* Unmatched items */
+        .unmatched-warning {
+            background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;
+            padding: 12px 16px; margin-bottom: 16px; font-size: 0.88em; color: #92400e;
         }
 
-        /* Import Modal */
-        .import-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+        /* Match detail */
+        .match-exact { color: #059669; }
+        .match-fuzzy { color: #2563eb; }
+        .match-low { color: #d97706; }
+        .match-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75em;
+            font-weight: 600; text-transform: uppercase;
         }
-        .import-overlay.active { display: flex; }
-        .import-modal {
-            background: #fff;
-            border-radius: 16px;
-            padding: 32px;
-            width: 520px;
-            max-width: 90vw;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-            position: relative;
+        .match-badge.exact { background: #dcfce7; color: #166534; }
+        .match-badge.fuzzy { background: #dbeafe; color: #1e40af; }
+        .match-badge.low { background: #fef3c7; color: #92400e; }
+
+        /* Collapsible */
+        .collapsible-header {
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
-        .import-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .import-modal-header h2 {
-            font-size: 1.2em;
-            color: #1a1a2e;
-        }
-        .import-close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5em;
-            color: #888;
-            cursor: pointer;
-            padding: 4px 8px;
-            line-height: 1;
-            border-radius: 6px;
-        }
-        .import-close-btn:hover { background: #f0f0f0; color: #333; }
-        .import-drop-zone {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 32px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .import-drop-zone.drag-over {
-            border-color: #2563eb;
-            background: #f0f4ff;
-        }
-        .drop-zone-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            color: #666;
-        }
-        .drop-zone-content a {
-            color: #2563eb;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .drop-zone-formats {
-            font-size: 0.8em;
-            color: #aaa;
-        }
-        .upload-icon {
-            width: 36px;
-            height: 36px;
-            color: #aaa;
-        }
-        .import-feedback {
-            margin-top: 16px;
-            padding: 16px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            line-height: 1.6;
-        }
-        .import-feedback.success {
-            background: #f0fdf4;
-            border: 1px solid #22c55e;
-            color: #166534;
-        }
-        .import-feedback.error {
-            background: #fef2f2;
-            border: 1px solid #ef4444;
-            color: #991b1b;
-        }
-        .import-feedback.warning {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-        }
-        .import-status {
-            font-size: 0.82em;
-            color: #059669;
-            font-weight: 500;
-            margin-top: 6px;
-        }
+        .collapsible-header h2 { margin-bottom: 0; }
+        .toggle-icon { font-size: 1.2em; color: #888; transition: transform 0.2s; }
+        .collapsible-body { display: none; margin-top: 16px; }
+        .collapsible-body.open { display: block; }
 
         /* Print */
         @media print {
             body { background: #fff; padding: 10px; }
-            .rate-section, .view-toggle { break-inside: avoid; }
-            .card { box-shadow: none; border: 1px solid #ddd; }
-            .table-container { box-shadow: none; border: 1px solid #ddd; }
-            .header-actions { display: none; }
-            .import-overlay { display: none !important; }
+            .card, .summary-card, .table-container { box-shadow: none; border: 1px solid #ddd; }
+            .header-actions, #wizardSection, .stepper { display: none; }
+            .verdict-banner { box-shadow: none; }
+        }
+
+        @media (max-width: 640px) {
+            .page-header { flex-direction: column; gap: 12px; }
+            .stepper { flex-wrap: wrap; gap: 4px; }
+            .step-line { width: 30px; }
+            .rate-section { flex-direction: column; align-items: flex-start; }
+            .verdict-banner { flex-direction: column; text-align: center; padding: 20px; }
+            .item-name { width: 150px; }
         }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="logo-bar">
-            <img src="logo.png" alt="Perrone Automotive">
+<div class="container">
+    <div class="logo-bar"><img src="logo.png" alt="Perrone Automotive"></div>
+    <div class="page-header">
+        <div>
+            <h1>Per-RO Audit Tool</h1>
+            <p class="subtitle" id="subtitleText">Compare price list totals against Per-RO program charges</p>
         </div>
-        <div class="page-header">
-            <div>
-                <h1>Per-RO Pricing Comparison</h1>
-                <p class="subtitle" id="subtitleText">Upload a file to get started</p>
-                <div class="import-status" id="importStatus"></div>
-            </div>
-            <div class="header-actions">
-                <button class="clear-data-btn" id="clearDataBtn">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                    Clear Data
-                </button>
-                <button class="new-customer-btn" id="newCustomerBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    New Customer
-                </button>
-            </div>
-        </div>
-
-        <div class="rate-section">
-            <div>
-                <label>Per-RO Rate:</label>
-                <div class="rate-input-group">
-                    <span>$</span>
-                    <input type="number" id="roRate" value="0.00" step="0.25" min="0">
-                    <span>/ RO</span>
-                </div>
-                <div class="rate-hint">Adjust this rate to compare Per-RO pricing vs Retail pricing</div>
-            </div>
-            <div class="suggested-rate-badge" id="suggestedRateNote">
-                <span>Suggested rate (matches retail): <strong id="suggestedRateValue">$0.00 / RO</strong></span>
-                <button class="use-suggested-btn" id="useSuggestedBtn">Use This Rate</button>
-            </div>
-        </div>
-
-        <div class="ro-entry-section" id="roEntrySection" style="display:none;">
-            <div class="ro-entry-header">
-                <h2>RO Counts per Month</h2>
-                <span class="rate-hint" id="roSourceLabel">Manual entry</span>
-            </div>
-            <div class="ro-entry-grid" id="roEntryGrid"></div>
-        </div>
-
-        <div class="summary-cards" id="summaryCards"></div>
-
-    <!-- Import Modal -->
-    <div class="import-overlay" id="importOverlay">
-        <div class="import-modal">
-            <div class="import-modal-header">
-                <h2>Import Customer Data</h2>
-                <button class="import-close-btn" id="importCloseBtn">&times;</button>
-            </div>
-            <div class="import-drop-zone" id="dropZone">
-                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden>
-                <div class="drop-zone-content">
-                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    <span>Drop file here or <a href="#" id="browseLink">browse</a></span>
-                    <span class="drop-zone-formats">Supports CSV, XLSX, XLS</span>
-                </div>
-            </div>
-            <div class="import-feedback" id="importFeedback" style="display:none;"></div>
+        <div class="header-actions">
+            <button class="btn-danger" id="startOverBtn" style="display:none;" onclick="startOver()">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                Start Over
+            </button>
         </div>
     </div>
 
-        <div class="view-toggle">
-            <button class="active" onclick="setView('monthly')">Monthly View</button>
-            <button onclick="setView('quarterly')">Quarterly View</button>
-            <button onclick="setView('annual')">Annual Summary</button>
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+        <div class="step-item active" data-step="1">
+            <div class="step-circle">1</div>
+            <span class="step-label">Price List</span>
+        </div>
+        <div class="step-line" data-after="1"></div>
+        <div class="step-item" data-step="2">
+            <div class="step-circle">2</div>
+            <span class="step-label">Invoices</span>
+        </div>
+        <div class="step-line" data-after="2"></div>
+        <div class="step-item" data-step="3">
+            <div class="step-circle">3</div>
+            <span class="step-label">Per-RO Rate</span>
+        </div>
+        <div class="step-line" data-after="3"></div>
+        <div class="step-item" data-step="4">
+            <div class="step-circle">4</div>
+            <span class="step-label">Results</span>
+        </div>
+    </div>
+
+    <!-- Wizard Section -->
+    <div id="wizardSection">
+
+        <!-- Step 1: Price List -->
+        <div class="step-panel active" id="step1">
+            <div class="card">
+                <h2>Upload Price List</h2>
+                <p style="color:#666;font-size:0.9em;margin-bottom:16px;">Upload the master price list (CSV, XLSX, or XLS). The tool will look for columns like Description/Item and Price/Rate.</p>
+                <div class="drop-zone" id="priceListDropZone">
+                    <input type="file" id="priceListFile" accept=".csv,.xlsx,.xls" hidden>
+                    <div class="drop-zone-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <span>Drop price list file here or <a href="#" id="priceListBrowse">browse</a></span>
+                        <span class="drop-zone-formats">CSV, XLSX, XLS</span>
+                    </div>
+                </div>
+                <div id="priceListFeedback" style="display:none;"></div>
+                <div id="priceListPreview" style="display:none;" class="preview-section"></div>
+                <div class="step-actions">
+                    <div></div>
+                    <button class="btn-primary" id="step1Next" disabled onclick="goToStep(2)">Continue &rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Invoices -->
+        <div class="step-panel" id="step2">
+            <div class="card">
+                <h2>Upload Invoices</h2>
+                <p style="color:#666;font-size:0.9em;margin-bottom:16px;">Upload the invoices for the audit period (a month or fiscal quarter). The tool will look for columns like RO#, Description, Quantity, and Date.</p>
+                <div class="drop-zone" id="invoiceDropZone">
+                    <input type="file" id="invoiceFile" accept=".csv,.xlsx,.xls" hidden>
+                    <div class="drop-zone-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <span>Drop invoice file here or <a href="#" id="invoiceBrowse">browse</a></span>
+                        <span class="drop-zone-formats">CSV, XLSX, XLS</span>
+                    </div>
+                </div>
+                <div id="invoiceFeedback" style="display:none;"></div>
+                <div id="invoicePreview" style="display:none;" class="preview-section"></div>
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick="goToStep(1)">&larr; Back</button>
+                    <button class="btn-primary" id="step2Next" disabled onclick="goToStep(3)">Continue &rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Per-RO Rate -->
+        <div class="step-panel" id="step3">
+            <div class="card">
+                <h2>Enter Current Per-RO Rate</h2>
+                <p style="color:#666;font-size:0.9em;margin-bottom:20px;">Enter the rate the customer is currently paying per repair order.</p>
+                <div class="rate-section">
+                    <div>
+                        <label>Current Per-RO Rate:</label>
+                        <div class="rate-input-group">
+                            <span>$</span>
+                            <input type="number" id="perRORate" value="" step="0.25" min="0" placeholder="0.00">
+                            <span>/ RO</span>
+                        </div>
+                        <div class="rate-context" id="rateContext"></div>
+                    </div>
+                </div>
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick="goToStep(2)">&larr; Back</button>
+                    <button class="btn-primary" id="runAuditBtn" onclick="runAudit()">Run Audit &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection">
+        <div id="verdictBanner"></div>
+
+        <div class="summary-cards" id="summaryCards"></div>
+
+        <div class="view-toggle" id="viewToggle">
+            <button class="active" onclick="setView('monthly', this)">Monthly</button>
+            <button onclick="setView('quarterly', this)">Quarterly</button>
+            <button onclick="setView('annual', this)">Annual</button>
         </div>
 
         <div class="table-container">
-            <table id="auditTable"></table>
+            <table class="data-table" id="breakdownTable"></table>
         </div>
 
-        <div class="chart-section">
-            <h2>Retail vs Per-RO Pricing by Period</h2>
+        <div class="card">
+            <h2>Price List vs Per-RO by Period</h2>
             <div class="chart-container" id="chartContainer"></div>
             <div class="chart-legend">
-                <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Retail Total</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Price List Total</div>
                 <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Per-RO Total</div>
             </div>
         </div>
 
-        <div class="top-items" id="topItemsSection">
-            <h2>Top 15 Items by Retail Value</h2>
+        <div class="card" id="topItemsCard">
+            <h2>Top 15 Items by Price List Value</h2>
             <div id="topItemsContainer"></div>
         </div>
+
+        <div class="card" id="unmatchedCard" style="display:none;">
+            <div class="collapsible-header" onclick="toggleSection('unmatched')">
+                <h2 id="unmatchedTitle">Unmatched Invoice Items</h2>
+                <span class="toggle-icon" id="unmatchedToggle">&#9660;</span>
+            </div>
+            <div class="collapsible-body" id="unmatchedBody"></div>
+        </div>
+
+        <div class="card" id="matchDetailCard">
+            <div class="collapsible-header" onclick="toggleSection('matchDetail')">
+                <h2>Match Details</h2>
+                <span class="toggle-icon" id="matchDetailToggle">&#9660;</span>
+            </div>
+            <div class="collapsible-body" id="matchDetailBody"></div>
+        </div>
     </div>
+</div>
 
-    <script>
-    // ===== STATE =====
-    let itemData = [];          // All imported item-level rows
-    let roData = {};            // Month -> RO count mapping
-    let roDataSource = 'manual'; // 'file' or 'manual'
-    let currentView = 'monthly';
+<script>
+// ===== STATE =====
+var state = {
+    step: 1,
+    priceList: [],
+    priceListNorm: [],
+    priceListFile: '',
+    invoiceItems: [],
+    invoiceFile: '',
+    perRORate: 0,
+    matchResults: null,
+    currentView: 'monthly'
+};
 
-    const MONTH_ORDER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+var MONTH_ORDER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 
-    // ===== UTILITIES =====
-    function getRate() {
-        return parseFloat(document.getElementById('roRate').value) || 0;
+// ===== UTILITIES =====
+function fmt(n) {
+    return '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtSigned(n) {
+    return (n >= 0 ? '+$' : '-$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function canonicalize(header) {
+    return String(header).toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+}
+
+function parseNumber(val) {
+    if (typeof val === 'number') return val;
+    if (!val && val !== 0) return 0;
+    var cleaned = String(val).replace(/[$,\s()]/g, '');
+    if (cleaned.startsWith('-')) return -parseFloat(cleaned.substring(1));
+    return parseFloat(cleaned) || 0;
+}
+
+function normalizeMonth(str) {
+    var s = String(str).trim();
+    var monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    var monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var lower = s.toLowerCase();
+    for (var i = 0; i < monthNames.length; i++) {
+        if (lower.includes(monthNames[i]) || lower.includes(monthAbbr[i].toLowerCase())) {
+            var yearMatch = s.match(/\d{4}/);
+            return yearMatch ? monthAbbr[i] + ' ' + yearMatch[0] : monthAbbr[i];
+        }
     }
-
-    function fmt(n) {
-        return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Try parsing as a date
+    var d = new Date(s);
+    if (!isNaN(d.getTime()) && d.getFullYear() > 1990) {
+        return monthAbbr[d.getMonth()] + ' ' + d.getFullYear();
     }
+    return s;
+}
 
-    function fmtDiff(n) {
-        const prefix = n >= 0 ? '+' : '-';
-        return prefix + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function dateToMonth(val) {
+    if (!val) return 'Unknown';
+    // If it's already a string with month name
+    if (typeof val === 'string') {
+        var norm = normalizeMonth(val);
+        if (norm !== val) return norm;
+        // Try as date string
+        var d = new Date(val);
+        if (!isNaN(d.getTime()) && d.getFullYear() > 1990) {
+            var monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return monthAbbr[d.getMonth()] + ' ' + d.getFullYear();
+        }
+        return normalizeMonth(val);
     }
-
-    function fmtDiffPct(difference, retailTotal) {
-        var dollar = fmtDiff(difference);
-        if (retailTotal === 0) return dollar;
-        var pct = Math.abs(difference / retailTotal * 100).toFixed(1);
-        return dollar + ' (' + pct + '%)';
+    // Excel serial date number
+    if (typeof val === 'number' && val > 30000 && val < 70000) {
+        var epoch = new Date((val - 25569) * 86400000);
+        var monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return monthAbbr[epoch.getMonth()] + ' ' + epoch.getFullYear();
     }
-
-    function inferQuarter(monthStr) {
-        const lower = monthStr.toLowerCase();
-        if (/jan|feb|mar/.test(lower)) return 'Q1';
-        if (/apr|may|jun/.test(lower)) return 'Q2';
-        if (/jul|aug|sep/.test(lower)) return 'Q3';
-        if (/oct|nov|dec/.test(lower)) return 'Q4';
-        return '';
+    if (val instanceof Date) {
+        var monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return monthAbbr[val.getMonth()] + ' ' + val.getFullYear();
     }
+    return String(val);
+}
 
-    function normalizeMonth(str) {
-        // Convert various month formats to "Mon YYYY" (e.g., "Jan 2025")
-        const s = String(str).trim();
-        const monthNames = ['january','february','march','april','may','june',
-                            'july','august','september','october','november','december'];
-        const monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const lower = s.toLowerCase();
+function inferQuarter(monthStr) {
+    var lower = String(monthStr).toLowerCase();
+    if (/jan|feb|mar/.test(lower)) return 'Q1';
+    if (/apr|may|jun/.test(lower)) return 'Q2';
+    if (/jul|aug|sep/.test(lower)) return 'Q3';
+    if (/oct|nov|dec/.test(lower)) return 'Q4';
+    return 'Q?';
+}
 
-        for (let i = 0; i < monthNames.length; i++) {
-            if (lower.includes(monthNames[i]) || lower.includes(monthAbbr[i].toLowerCase())) {
-                // Extract year
-                const yearMatch = s.match(/\d{4}/);
-                const year = yearMatch ? yearMatch[0] : '';
-                return year ? monthAbbr[i] + ' ' + year : monthAbbr[i];
+function sortMonths(months) {
+    return months.slice().sort(function(a, b) {
+        var ai = MONTH_ORDER.findIndex(function(m) { return a.toLowerCase().includes(m); });
+        var bi = MONTH_ORDER.findIndex(function(m) { return b.toLowerCase().includes(m); });
+        var aYear = (a.match(/\d{4}/) || ['0'])[0];
+        var bYear = (b.match(/\d{4}/) || ['0'])[0];
+        if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
+        return ai - bi;
+    });
+}
+
+// ===== COLUMN DETECTION =====
+var PRICE_LIST_PATTERNS = {
+    description: {
+        patterns: ['description','desc','item','itemdescription','itemname','name',
+                   'product','productname','service','servicename','partname',
+                   'partdescription','laborcode','opcode','part','labor'],
+        required: true
+    },
+    listPrice: {
+        patterns: ['price','listprice','retailprice','retail','unitprice','rate',
+                   'amount','charge','fee','msrp','sellprice','cost','alacarte',
+                   'saleprice','each','priceea','priceeach'],
+        required: true
+    },
+    itemId: {
+        patterns: ['id','itemid','sku','code','partno','partnumber','opcode',
+                   'itemcode','productcode','number','num','no'],
+        required: false
+    },
+    category: {
+        patterns: ['category','cat','type','group','department','dept','class'],
+        required: false
+    }
+};
+
+var INVOICE_PATTERNS = {
+    roNumber: {
+        patterns: ['ro','ronumber','ronum','repairorder','repairordernumber',
+                   'ordernumber','order','ordernum','ticket','ticketno',
+                   'invoiceno','invoice','invoicenumber','workorder','wo',
+                   'rono','orderno'],
+        required: true
+    },
+    description: {
+        patterns: ['description','desc','item','itemdescription','service',
+                   'laborname','linedesc','lineitem','partname','opcode',
+                   'name','product','part','labor'],
+        required: true
+    },
+    quantity: {
+        patterns: ['qty','quantity','units','count','unitssold','qtyshipped','amount'],
+        required: false
+    },
+    date: {
+        patterns: ['date','invoicedate','rodate','orderdate','servicedate',
+                   'closeddate','completeddate','month','period','closedate'],
+        required: false
+    }
+};
+
+function scoreMapping(headers, fieldPatterns) {
+    var mapping = {};
+    var score = 0;
+    var requiredMet = true;
+    var usedHeaders = new Set();
+
+    // Pass 1: exact canonical matches
+    for (var field in fieldPatterns) {
+        var config = fieldPatterns[field];
+        for (var h = 0; h < headers.length; h++) {
+            var header = headers[h];
+            if (usedHeaders.has(header)) continue;
+            var canon = canonicalize(header);
+            if (config.patterns.indexOf(canon) >= 0) {
+                mapping[field] = header;
+                usedHeaders.add(header);
+                score += 10;
+                break;
             }
         }
-        return s; // Return as-is if no month detected
     }
 
-    // ===== DATA AGGREGATION =====
-    function getMonthsInData() {
-        const months = [...new Set(itemData.map(item => item.month))];
-        months.sort((a, b) => {
-            const ai = MONTH_ORDER.findIndex(m => a.toLowerCase().includes(m));
-            const bi = MONTH_ORDER.findIndex(m => b.toLowerCase().includes(m));
-            return ai - bi;
-        });
-        return months;
-    }
-
-    function getMonthlySummaries() {
-        const rate = getRate();
-        const months = getMonthsInData();
-        return months.map(month => {
-            const monthItems = itemData.filter(item => item.month === month);
-            const retailTotal = monthItems.reduce((sum, item) => sum + item.retailTotal, 0);
-            const ourCostTotal = monthItems.reduce((sum, item) => sum + item.costTotal, 0);
-            const roCount = roData[month] || 0;
-            const perROTotal = roCount * rate;
-            const difference = retailTotal - perROTotal;
-            return {
-                period: month,
-                month: month,
-                quarter: inferQuarter(month),
-                retailTotal,
-                perROTotal,
-                difference,
-                ourCostTotal,
-                roCount,
-                itemCount: monthItems.length
-            };
-        });
-    }
-
-    function getQuarterlyData() {
-        const summaries = getMonthlySummaries();
-        const quarters = {};
-        summaries.forEach(m => {
-            if (!quarters[m.quarter]) {
-                quarters[m.quarter] = {
-                    period: m.quarter, retailTotal: 0, perROTotal: 0,
-                    difference: 0, ourCostTotal: 0, roCount: 0, itemCount: 0
-                };
+    // Pass 2: substring matches
+    for (var field in fieldPatterns) {
+        if (mapping[field]) continue;
+        var config = fieldPatterns[field];
+        for (var h = 0; h < headers.length; h++) {
+            var header = headers[h];
+            if (usedHeaders.has(header)) continue;
+            var canon = canonicalize(header);
+            var match = config.patterns.some(function(p) { return canon.includes(p) || p.includes(canon); });
+            if (match) {
+                mapping[field] = header;
+                usedHeaders.add(header);
+                score += 5;
+                break;
             }
-            const q = quarters[m.quarter];
-            q.retailTotal += m.retailTotal;
-            q.perROTotal += m.perROTotal;
-            q.ourCostTotal += m.ourCostTotal;
-            q.roCount += m.roCount;
-            q.itemCount += m.itemCount;
+        }
+    }
+
+    for (var field in fieldPatterns) {
+        if (fieldPatterns[field].required && !mapping[field]) requiredMet = false;
+    }
+
+    return { mapping: mapping, score: score, requiredMet: requiredMet };
+}
+
+// ===== FUZZY MATCHING =====
+function normalizeForMatch(str) {
+    return String(str).toLowerCase().trim()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function tokenize(str) {
+    var stop = ['the','a','an','and','or','of','for','with','in','on','to','per','ea','each'];
+    return normalizeForMatch(str).split(' ').filter(function(t) {
+        return t.length > 0 && stop.indexOf(t) < 0;
+    });
+}
+
+function levenshtein(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    var matrix = [];
+    for (var i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (var j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (var i = 1; i <= b.length; i++) {
+        for (var j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+function scorePairMatch(invoiceDesc, priceDesc) {
+    var a = normalizeForMatch(invoiceDesc);
+    var b = normalizeForMatch(priceDesc);
+
+    // Pass 1: exact normalized match
+    if (a === b) return { score: 1.0, type: 'exact' };
+
+    // Pass 2: one contains the other
+    if (a.includes(b) || b.includes(a)) return { score: 0.92, type: 'fuzzy' };
+
+    // Pass 3: token containment
+    var tokA = tokenize(invoiceDesc);
+    var tokB = tokenize(priceDesc);
+    if (tokA.length > 0 && tokB.length > 0) {
+        var shorter = tokA.length <= tokB.length ? tokA : tokB;
+        var longer = tokA.length <= tokB.length ? tokB : tokA;
+        var contained = shorter.every(function(t) {
+            return longer.some(function(lt) { return lt.includes(t) || t.includes(lt); });
         });
-        Object.values(quarters).forEach(q => {
-            q.difference = q.retailTotal - q.perROTotal;
+        if (contained) return { score: 0.88, type: 'fuzzy' };
+
+        // Pass 4: Jaccard token similarity
+        var intersection = 0;
+        tokA.forEach(function(t) {
+            if (tokB.some(function(bt) { return bt === t || bt.includes(t) || t.includes(bt); })) {
+                intersection++;
+            }
         });
+        var union = new Set(tokA.concat(tokB)).size;
+        var jaccard = intersection / union;
+        if (jaccard >= 0.5) return { score: jaccard * 0.85, type: 'fuzzy' };
+    }
+
+    // Pass 5: Levenshtein
+    var dist = levenshtein(a, b);
+    var maxLen = Math.max(a.length, b.length);
+    var sim = maxLen > 0 ? 1 - (dist / maxLen) : 0;
+    if (sim >= 0.7) return { score: sim * 0.8, type: 'fuzzy' };
+
+    return { score: sim * 0.5, type: 'none' };
+}
+
+function matchInvoicesToPriceList(invoiceItems, priceList, priceListNorm) {
+    // Group invoice items by unique description
+    var uniqueDescs = {};
+    invoiceItems.forEach(function(item) {
+        var key = normalizeForMatch(item.description);
+        if (!uniqueDescs[key]) uniqueDescs[key] = item.description;
+    });
+
+    // Build match lookup: invoiceNormDesc -> { priceListIndex, score, type }
+    var matchLookup = {};
+    var MATCH_THRESHOLD = 0.40;
+
+    Object.keys(uniqueDescs).forEach(function(normDesc) {
+        var bestScore = 0;
+        var bestIdx = -1;
+        var bestType = 'none';
+
+        for (var p = 0; p < priceList.length; p++) {
+            var result = scorePairMatch(uniqueDescs[normDesc], priceList[p].description);
+            if (result.score > bestScore) {
+                bestScore = result.score;
+                bestIdx = p;
+                bestType = result.type;
+            }
+        }
+
+        if (bestScore >= MATCH_THRESHOLD && bestIdx >= 0) {
+            matchLookup[normDesc] = {
+                priceListIndex: bestIdx,
+                score: bestScore,
+                type: bestType
+            };
+        }
+    });
+
+    // Apply matches
+    var matched = [];
+    var unmatched = [];
+
+    invoiceItems.forEach(function(item) {
+        var key = normalizeForMatch(item.description);
+        var match = matchLookup[key];
+        if (match) {
+            var plItem = priceList[match.priceListIndex];
+            matched.push({
+                invoiceDesc: item.description,
+                priceListDesc: plItem.description,
+                matchScore: match.score,
+                matchType: match.type,
+                quantity: item.quantity,
+                listPrice: plItem.listPrice,
+                extendedPrice: item.quantity * plItem.listPrice,
+                roNumber: item.roNumber,
+                month: item.month
+            });
+        } else {
+            unmatched.push({
+                description: item.description,
+                quantity: item.quantity,
+                roNumber: item.roNumber,
+                month: item.month
+            });
+        }
+    });
+
+    return { matched: matched, unmatched: unmatched };
+}
+
+// ===== FILE PARSING =====
+function parsePriceList(jsonRows, mapping) {
+    var parsed = [];
+    var errors = [];
+
+    jsonRows.forEach(function(row, i) {
+        var desc = String(row[mapping.description] || '').trim();
+        var priceRaw = row[mapping.listPrice];
+
+        if (!desc) return;
+
+        var price = parseNumber(priceRaw);
+        if (isNaN(price) || price <= 0) {
+            if (desc && priceRaw) errors.push('Row ' + (i + 2) + ': invalid price "' + priceRaw + '" for "' + desc + '"');
+            return;
+        }
+
+        parsed.push({
+            description: desc,
+            listPrice: price,
+            itemId: mapping.itemId ? String(row[mapping.itemId] || '').trim() : '',
+            category: mapping.category ? String(row[mapping.category] || '').trim() : ''
+        });
+    });
+
+    return { data: parsed, errors: errors };
+}
+
+function parseInvoices(jsonRows, mapping) {
+    var parsed = [];
+    var errors = [];
+
+    jsonRows.forEach(function(row, i) {
+        var roNum = String(row[mapping.roNumber] || '').trim();
+        var desc = String(row[mapping.description] || '').trim();
+
+        if (!desc && !roNum) return;
+        if (!desc) return;
+
+        var qty = mapping.quantity ? parseNumber(row[mapping.quantity]) : 1;
+        if (isNaN(qty) || qty === 0) qty = 1;
+
+        var dateVal = mapping.date ? row[mapping.date] : null;
+        var month = dateVal ? dateToMonth(dateVal) : 'Unknown';
+
+        parsed.push({
+            roNumber: roNum,
+            description: desc,
+            quantity: qty,
+            month: month
+        });
+    });
+
+    return { data: parsed, errors: errors };
+}
+
+// ===== WIZARD NAVIGATION =====
+function goToStep(stepNum) {
+    state.step = stepNum;
+    for (var i = 1; i <= 3; i++) {
+        var panel = document.getElementById('step' + i);
+        panel.classList.toggle('active', i === stepNum);
+    }
+    updateStepper();
+
+    if (stepNum === 3) {
+        var uniqueROs = new Set(state.invoiceItems.map(function(i) { return i.roNumber; }));
+        var months = getInvoiceMonths();
+        document.getElementById('rateContext').innerHTML =
+            '<strong>' + uniqueROs.size + '</strong> unique ROs found across <strong>' +
+            months.length + '</strong> month(s): ' + months.join(', ');
+    }
+}
+
+function updateStepper() {
+    document.querySelectorAll('.step-item').forEach(function(el) {
+        var s = parseInt(el.dataset.step);
+        el.classList.remove('active', 'done');
+        if (s === state.step) el.classList.add('active');
+        else if (s < state.step) el.classList.add('done');
+    });
+    document.querySelectorAll('.step-line').forEach(function(el) {
+        var afterStep = parseInt(el.dataset.after);
+        el.classList.toggle('done', afterStep < state.step);
+    });
+}
+
+function startOver() {
+    state = {
+        step: 1, priceList: [], priceListNorm: [], priceListFile: '',
+        invoiceItems: [], invoiceFile: '', perRORate: 0,
+        matchResults: null, currentView: 'monthly'
+    };
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('wizardSection').style.display = 'block';
+    document.getElementById('stepper').style.display = 'flex';
+    document.getElementById('startOverBtn').style.display = 'none';
+
+    // Reset upload zones
+    ['priceListDropZone', 'invoiceDropZone'].forEach(function(id) {
+        var el = document.getElementById(id);
+        el.classList.remove('uploaded');
+    });
+    document.getElementById('priceListFeedback').style.display = 'none';
+    document.getElementById('priceListPreview').style.display = 'none';
+    document.getElementById('invoiceFeedback').style.display = 'none';
+    document.getElementById('invoicePreview').style.display = 'none';
+    document.getElementById('step1Next').disabled = true;
+    document.getElementById('step2Next').disabled = true;
+    document.getElementById('perRORate').value = '';
+    document.getElementById('priceListFile').value = '';
+    document.getElementById('invoiceFile').value = '';
+
+    goToStep(1);
+}
+
+function getInvoiceMonths() {
+    var months = [...new Set(state.invoiceItems.map(function(i) { return i.month; }))];
+    return sortMonths(months);
+}
+
+// ===== FILE UPLOAD HANDLERS =====
+function handlePriceListFile(file) {
+    if (!file) return;
+    readAndParseFile(file, function(workbook) {
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        if (json.length === 0) {
+            showUploadFeedback('priceListFeedback', 'error', 'File appears to be empty.');
+            return;
+        }
+
+        var headers = Object.keys(json[0]);
+        var result = scoreMapping(headers, PRICE_LIST_PATTERNS);
+
+        if (!result.requiredMet) {
+            showUploadFeedback('priceListFeedback', 'error',
+                'Could not find required columns (Description and Price).<br>' +
+                'Found columns: ' + headers.map(function(h) { return '"' + h + '"'; }).join(', '));
+            return;
+        }
+
+        var parsed = parsePriceList(json, result.mapping);
+        if (parsed.data.length === 0) {
+            showUploadFeedback('priceListFeedback', 'error', 'No valid rows found with descriptions and prices.');
+            return;
+        }
+
+        state.priceList = parsed.data;
+        state.priceListNorm = parsed.data.map(function(item) { return normalizeForMatch(item.description); });
+        state.priceListFile = file.name;
+
+        var html = '<strong>' + file.name + '</strong> &mdash; ' + parsed.data.length + ' items loaded';
+        html += buildMappingHtml(result.mapping, PRICE_LIST_PATTERNS);
+        if (parsed.errors.length > 0) {
+            html += '<br><span style="color:#92400e;">' + parsed.errors.length + ' rows skipped (invalid data)</span>';
+        }
+        showUploadFeedback('priceListFeedback', 'success', html);
+
+        // Preview
+        showPreviewTable('priceListPreview', parsed.data.slice(0, 8), ['description', 'listPrice'], ['Description', 'List Price']);
+
+        document.getElementById('priceListDropZone').classList.add('uploaded');
+        document.getElementById('step1Next').disabled = false;
+    });
+}
+
+function handleInvoiceFile(file) {
+    if (!file) return;
+    readAndParseFile(file, function(workbook) {
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var json = XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true });
+        if (json.length === 0) {
+            showUploadFeedback('invoiceFeedback', 'error', 'File appears to be empty.');
+            return;
+        }
+
+        var headers = Object.keys(json[0]);
+        var result = scoreMapping(headers, INVOICE_PATTERNS);
+
+        if (!result.requiredMet) {
+            showUploadFeedback('invoiceFeedback', 'error',
+                'Could not find required columns (RO Number and Description).<br>' +
+                'Found columns: ' + headers.map(function(h) { return '"' + h + '"'; }).join(', '));
+            return;
+        }
+
+        var parsed = parseInvoices(json, result.mapping);
+        if (parsed.data.length === 0) {
+            showUploadFeedback('invoiceFeedback', 'error', 'No valid rows found.');
+            return;
+        }
+
+        state.invoiceItems = parsed.data;
+        state.invoiceFile = file.name;
+
+        var uniqueROs = new Set(parsed.data.map(function(i) { return i.roNumber; }));
+        var months = getInvoiceMonths();
+        var html = '<strong>' + file.name + '</strong> &mdash; ' + parsed.data.length + ' line items, ' +
+                   uniqueROs.size + ' unique ROs, ' + months.length + ' month(s)';
+        html += buildMappingHtml(result.mapping, INVOICE_PATTERNS);
+        if (parsed.errors.length > 0) {
+            html += '<br><span style="color:#92400e;">' + parsed.errors.length + ' rows skipped</span>';
+        }
+        showUploadFeedback('invoiceFeedback', 'success', html);
+
+        // Preview
+        showPreviewTable('invoicePreview', parsed.data.slice(0, 8),
+            ['roNumber', 'description', 'quantity', 'month'],
+            ['RO #', 'Description', 'Qty', 'Month']);
+
+        document.getElementById('invoiceDropZone').classList.add('uploaded');
+        document.getElementById('step2Next').disabled = false;
+    });
+}
+
+function readAndParseFile(file, callback) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            callback(workbook);
+        } catch (err) {
+            alert('Failed to parse file: ' + err.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function showUploadFeedback(elementId, type, html) {
+    var el = document.getElementById(elementId);
+    el.className = 'feedback ' + type;
+    el.innerHTML = html;
+    el.style.display = 'block';
+}
+
+function buildMappingHtml(mapping, patterns) {
+    var html = '<table class="mapping-table">';
+    for (var field in patterns) {
+        var mapped = mapping[field];
+        var required = patterns[field].required;
+        var icon = mapped ? '&#10003;' : (required ? '&#10007;' : '&mdash;');
+        var color = mapped ? '#059669' : (required ? '#dc2626' : '#888');
+        html += '<tr><td class="mapping-icon" style="color:' + color + '">' + icon + '</td>';
+        html += '<td style="font-weight:600">' + field + '</td>';
+        html += '<td style="color:#666">' + (mapped ? '&larr; "' + mapped + '"' : '(not found)') + '</td></tr>';
+    }
+    html += '</table>';
+    return html;
+}
+
+function showPreviewTable(containerId, data, fields, headers) {
+    var el = document.getElementById(containerId);
+    var html = '<div class="preview-table-wrap"><table class="preview-table"><thead><tr>';
+    headers.forEach(function(h) { html += '<th>' + h + '</th>'; });
+    html += '</tr></thead><tbody>';
+    data.forEach(function(row) {
+        html += '<tr>';
+        fields.forEach(function(f) {
+            var val = row[f];
+            if (typeof val === 'number' && f.toLowerCase().includes('price')) val = fmt(val);
+            html += '<td>' + (val !== undefined ? val : '') + '</td>';
+        });
+        html += '</tr>';
+    });
+    if (data.length >= 8) html += '<tr><td colspan="' + headers.length + '" style="text-align:center;color:#888;font-style:italic;">... and more</td></tr>';
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+    el.style.display = 'block';
+}
+
+// ===== RUN AUDIT =====
+function runAudit() {
+    var rate = parseFloat(document.getElementById('perRORate').value);
+    if (isNaN(rate) || rate <= 0) {
+        alert('Please enter a valid Per-RO rate greater than zero.');
+        return;
+    }
+    state.perRORate = rate;
+
+    // Match invoice items to price list
+    state.matchResults = matchInvoicesToPriceList(state.invoiceItems, state.priceList, state.priceListNorm);
+
+    // Calculate results
+    var matched = state.matchResults.matched;
+    var unmatched = state.matchResults.unmatched;
+    var uniqueROs = new Set(state.invoiceItems.map(function(i) { return i.roNumber; }));
+    var roCount = uniqueROs.size;
+    var priceListTotal = matched.reduce(function(sum, m) { return sum + m.extendedPrice; }, 0);
+    var perROTotal = roCount * rate;
+    var difference = perROTotal - priceListTotal;
+
+    state.auditCalc = {
+        roCount: roCount,
+        priceListTotal: priceListTotal,
+        perROTotal: perROTotal,
+        difference: difference,
+        matchedCount: matched.length,
+        unmatchedCount: unmatched.length,
+        totalItems: state.invoiceItems.length,
+        matchRate: state.invoiceItems.length > 0 ? (matched.length / state.invoiceItems.length * 100) : 0
+    };
+
+    // Show results
+    document.getElementById('wizardSection').style.display = 'none';
+    document.getElementById('stepper').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('startOverBtn').style.display = 'flex';
+
+    state.step = 4;
+    renderResults();
+}
+
+// ===== RENDERING =====
+function renderResults() {
+    renderVerdict();
+    renderSummaryCards();
+    renderBreakdownTable();
+    renderChart();
+    renderTopItems();
+    renderUnmatched();
+    renderMatchDetail();
+}
+
+function renderVerdict() {
+    var calc = state.auditCalc;
+    var html = '';
+
+    if (calc.difference > 0) {
+        // Customer overpaid
+        html += '<div class="verdict-banner overpaid">';
+        html += '<div class="verdict-icon">&#9989;</div>';
+        html += '<div class="verdict-content">';
+        html += '<div class="verdict-title">Customer Overpaid &mdash; Refund Due</div>';
+        html += '<div class="verdict-amount">' + fmt(calc.difference) + '</div>';
+        html += '<div class="verdict-detail">The customer paid ' + fmt(calc.perROTotal) + ' on the Per-RO program but would have paid ' + fmt(calc.priceListTotal) + ' at price list rates (' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '/RO).</div>';
+        html += '</div></div>';
+    } else if (calc.difference < 0) {
+        // Customer underpaid
+        var recommendedRate = calc.priceListTotal / calc.roCount;
+        html += '<div class="verdict-banner underpaid">';
+        html += '<div class="verdict-icon">&#9888;&#65039;</div>';
+        html += '<div class="verdict-content">';
+        html += '<div class="verdict-title">Customer Underpaid &mdash; Rate Adjustment Needed</div>';
+        html += '<div class="verdict-amount">Shortfall: ' + fmt(Math.abs(calc.difference)) + '</div>';
+        html += '<div class="verdict-detail">The customer paid ' + fmt(calc.perROTotal) + ' on the Per-RO program but would have paid ' + fmt(calc.priceListTotal) + ' at price list rates (' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '/RO).</div>';
+        html += '<div class="recommendation-box">';
+        html += '<div class="rec-label">Recommended New Per-RO Rate</div>';
+        html += '<div class="rec-value">' + fmt(recommendedRate) + ' / RO</div>';
+        html += '</div>';
+        html += '</div></div>';
+    } else {
+        html += '<div class="verdict-banner balanced">';
+        html += '<div class="verdict-icon">&#9989;</div>';
+        html += '<div class="verdict-content">';
+        html += '<div class="verdict-title">Pricing is Balanced</div>';
+        html += '<div class="verdict-amount">' + fmt(0) + '</div>';
+        html += '<div class="verdict-detail">The Per-RO charges exactly match what the customer would have paid at price list rates.</div>';
+        html += '</div></div>';
+    }
+
+    document.getElementById('verdictBanner').innerHTML = html;
+}
+
+function renderSummaryCards() {
+    var calc = state.auditCalc;
+    var diffClass = calc.difference > 0 ? 'sc-green' : calc.difference < 0 ? 'sc-red' : 'sc-blue';
+    var diffLabel = calc.difference > 0 ? 'Overpaid (refund due)' : calc.difference < 0 ? 'Underpaid (rate increase needed)' : 'Balanced';
+
+    var html = '';
+    html += '<div class="summary-card sc-blue"><div class="sc-label">Price List Total</div><div class="sc-value">' + fmt(calc.priceListTotal) + '</div><div class="sc-sub">' + calc.matchedCount + ' matched items</div></div>';
+    html += '<div class="summary-card sc-green"><div class="sc-label">Per-RO Total</div><div class="sc-value">' + fmt(calc.perROTotal) + '</div><div class="sc-sub">' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '</div></div>';
+    html += '<div class="summary-card ' + diffClass + '"><div class="sc-label">Difference</div><div class="sc-value">' + fmtSigned(calc.difference) + '</div><div class="sc-sub">' + diffLabel + '</div></div>';
+    html += '<div class="summary-card sc-amber"><div class="sc-label">Match Rate</div><div class="sc-value">' + calc.matchRate.toFixed(1) + '%</div><div class="sc-sub">' + calc.matchedCount + ' of ' + calc.totalItems + ' items matched</div></div>';
+
+    document.getElementById('summaryCards').innerHTML = html;
+}
+
+function getMonthlyBreakdown() {
+    var matched = state.matchResults.matched;
+    var months = getInvoiceMonths();
+
+    return months.map(function(month) {
+        var monthMatched = matched.filter(function(m) { return m.month === month; });
+        var plTotal = monthMatched.reduce(function(s, m) { return s + m.extendedPrice; }, 0);
+        var monthROs = new Set(state.invoiceItems.filter(function(i) { return i.month === month; }).map(function(i) { return i.roNumber; }));
+        var roCount = monthROs.size;
+        var perROTotal = roCount * state.perRORate;
+
+        return {
+            period: month,
+            roCount: roCount,
+            priceListTotal: plTotal,
+            perROTotal: perROTotal,
+            difference: perROTotal - plTotal
+        };
+    });
+}
+
+function getBreakdownData() {
+    var monthly = getMonthlyBreakdown();
+    if (state.currentView === 'monthly') return monthly;
+
+    if (state.currentView === 'quarterly') {
+        var quarters = {};
+        monthly.forEach(function(m) {
+            var q = inferQuarter(m.period);
+            if (!quarters[q]) quarters[q] = { period: q, roCount: 0, priceListTotal: 0, perROTotal: 0, difference: 0 };
+            quarters[q].roCount += m.roCount;
+            quarters[q].priceListTotal += m.priceListTotal;
+            quarters[q].perROTotal += m.perROTotal;
+        });
+        Object.values(quarters).forEach(function(q) { q.difference = q.perROTotal - q.priceListTotal; });
         return Object.values(quarters);
     }
 
-    function getAnnualData() {
-        const summaries = getMonthlySummaries();
-        const total = {
-            period: 'Full Year', retailTotal: 0, perROTotal: 0,
-            difference: 0, ourCostTotal: 0, roCount: 0, itemCount: 0
-        };
-        summaries.forEach(m => {
-            total.retailTotal += m.retailTotal;
-            total.perROTotal += m.perROTotal;
-            total.ourCostTotal += m.ourCostTotal;
-            total.roCount += m.roCount;
-            total.itemCount += m.itemCount;
-        });
-        total.difference = total.retailTotal - total.perROTotal;
-        return [total];
-    }
-
-    function getDisplayData() {
-        if (currentView === 'monthly') return getMonthlySummaries();
-        if (currentView === 'quarterly') return getQuarterlyData();
-        return getAnnualData();
-    }
-
-    function calcSuggestedRate() {
-        const summaries = getMonthlySummaries();
-        const totalRetail = summaries.reduce((s, m) => s + m.retailTotal, 0);
-        const totalROs = summaries.reduce((s, m) => s + m.roCount, 0);
-        return totalROs > 0 ? totalRetail / totalROs : 0;
-    }
-
-    // ===== RENDERING =====
-    function renderSummaryCards() {
-        const annual = getAnnualData()[0];
-
-        let html = '';
-
-        html += '<div class="card card-blue">';
-        html += '<div class="card-label">Annual Retail Total</div>';
-        html += '<div class="card-value">' + fmt(annual.retailTotal) + '</div>';
-        html += '<div class="card-sub">' + annual.itemCount.toLocaleString() + ' line items across ' + getMonthsInData().length + ' months</div>';
-        html += '</div>';
-
-        html += '<div class="card card-green">';
-        html += '<div class="card-label">Annual Per-RO Total</div>';
-        html += '<div class="card-value">' + fmt(annual.perROTotal) + '</div>';
-        html += '<div class="card-sub">' + annual.roCount.toLocaleString() + ' ROs x ' + fmt(getRate()) + '</div>';
-        html += '</div>';
-
-        var diffClass = annual.difference > 0 ? 'card-red' : annual.difference < 0 ? 'card-green' : 'card-amber';
-        var diffLabel = annual.difference > 0 ? 'Retail costs more' : annual.difference < 0 ? 'Per-RO costs more' : 'Balanced';
-        html += '<div class="card ' + diffClass + '">';
-        html += '<div class="card-label">Difference</div>';
-        html += '<div class="card-value">' + fmtDiffPct(annual.difference, annual.retailTotal) + '</div>';
-        html += '<div class="card-sub">' + diffLabel + '</div>';
-        html += '</div>';
-
-
-        document.getElementById('summaryCards').innerHTML = html;
-    }
-
-    function renderTable() {
-        var data = getDisplayData();
-
-        var html = '<thead><tr>';
-        html += '<th>Period</th><th>ROs</th><th>Retail Total</th><th>Per-RO Total</th>';
-        html += '<th>Difference</th>';
-        html += '</tr></thead><tbody>';
-
-        var totals = { roCount: 0, retailTotal: 0, perROTotal: 0, difference: 0, ourCostTotal: 0 };
-
-        data.forEach(function(d) {
-            totals.roCount += d.roCount;
-            totals.retailTotal += d.retailTotal;
-            totals.perROTotal += d.perROTotal;
-            totals.difference += d.difference;
-            totals.ourCostTotal += d.ourCostTotal;
-
-            var diffClass = d.difference > 0 ? 'difference-positive' : d.difference < 0 ? 'difference-negative' : '';
-
-            html += '<tr>';
-            html += '<td>' + d.period + '</td>';
-            html += '<td>' + d.roCount.toLocaleString() + '</td>';
-            html += '<td>' + fmt(d.retailTotal) + '</td>';
-            html += '<td>' + fmt(d.perROTotal) + '</td>';
-            html += '<td class="' + diffClass + '">' + fmtDiffPct(d.difference, d.retailTotal) + '</td>';
-            html += '</tr>';
-        });
-
-        if (data.length > 1) {
-            var diffClass = totals.difference > 0 ? 'difference-positive' : totals.difference < 0 ? 'difference-negative' : '';
-            html += '<tr class="total-row">';
-            html += '<td>TOTAL</td>';
-            html += '<td>' + totals.roCount.toLocaleString() + '</td>';
-            html += '<td>' + fmt(totals.retailTotal) + '</td>';
-            html += '<td>' + fmt(totals.perROTotal) + '</td>';
-            html += '<td class="' + diffClass + '">' + fmtDiffPct(totals.difference, totals.retailTotal) + '</td>';
-            html += '</tr>';
-        }
-
-        html += '</tbody>';
-        document.getElementById('auditTable').innerHTML = html;
-    }
-
-    function renderChart() {
-        var data = getDisplayData();
-        var container = document.getElementById('chartContainer');
-
-        if (data.length === 0) { container.innerHTML = ''; return; }
-
-        var maxVal = Math.max.apply(null, data.map(function(d) { return Math.max(d.retailTotal, d.perROTotal); })) * 1.1;
-        if (maxVal === 0) { container.innerHTML = ''; return; }
-
-        var html = '';
-
-        // Y-axis
-        html += '<div class="chart-y-axis">';
-        for (var i = 4; i >= 0; i--) {
-            var val = (maxVal / 4) * i;
-            html += '<div class="chart-y-label">$' + (val/1000).toFixed(1) + 'k</div>';
-        }
-        html += '</div>';
-
-        data.forEach(function(d) {
-            var retailHeight = (d.retailTotal / maxVal) * 260;
-            var perROHeight = (d.perROTotal / maxVal) * 260;
-            var label = currentView === 'monthly'
-                ? d.period.replace(/\s*\d{4}/, '').substring(0, 3)
-                : d.period;
-
-            html += '<div class="chart-bar-group">';
-            html += '<div class="chart-bars">';
-            html += '<div class="chart-bar retail" style="height:' + retailHeight + 'px" title="Retail: ' + fmt(d.retailTotal) + '"></div>';
-            html += '<div class="chart-bar perro" style="height:' + perROHeight + 'px" title="Per-RO: ' + fmt(d.perROTotal) + '"></div>';
-            html += '</div>';
-            html += '<div class="chart-label">' + label + '</div>';
-            html += '</div>';
-        });
-
-        container.innerHTML = html;
-    }
-
-    function renderTopItems() {
-        if (!itemData.length) {
-            document.getElementById('topItemsContainer').innerHTML =
-                '<p style="color:#888;text-align:center;padding:20px;">No items data loaded.</p>';
-            return;
-        }
-
-        // Aggregate items across all months by description
-        var itemAgg = {};
-        itemData.forEach(function(item) {
-            var key = item.description;
-            if (!itemAgg[key]) {
-                itemAgg[key] = { desc: item.description, retailTotal: 0, costTotal: 0 };
-            }
-            itemAgg[key].retailTotal += item.retailTotal;
-            itemAgg[key].costTotal += item.costTotal;
-        });
-
-        var sorted = Object.values(itemAgg)
-            .sort(function(a, b) { return b.retailTotal - a.retailTotal; })
-            .slice(0, 15);
-
-        if (sorted.length === 0) return;
-
-        var maxVal = sorted[0].retailTotal;
-        var html = '';
-        sorted.forEach(function(item, i) {
-            var pct = maxVal > 0 ? (item.retailTotal / maxVal) * 100 : 0;
-            html += '<div class="item-bar-row">';
-            html += '<div class="item-rank">' + (i + 1) + '</div>';
-            html += '<div class="item-name" title="' + item.desc + '">' + item.desc + '</div>';
-            html += '<div class="item-bar-container">';
-            html += '<div class="item-bar-fill" style="width:' + pct + '%"></div>';
-            html += '</div>';
-            html += '<div class="item-cost">' + fmt(item.retailTotal) + '</div>';
-            html += '</div>';
-        });
-        document.getElementById('topItemsContainer').innerHTML = html;
-    }
-
-    function updateSuggestedRate() {
-        var rate = calcSuggestedRate();
-        document.getElementById('suggestedRateValue').textContent = fmt(rate) + ' / RO';
-    }
-
-    function renderROEntryFields() {
-        var months = getMonthsInData();
-        var section = document.getElementById('roEntrySection');
-        var grid = document.getElementById('roEntryGrid');
-
-        if (months.length === 0) {
-            section.style.display = 'none';
-            return;
-        }
-        section.style.display = 'block';
-
-        var html = '';
-        months.forEach(function(month) {
-            var val = roData[month] || '';
-            html += '<div class="ro-entry-item">';
-            html += '<label>' + month + '</label>';
-            html += '<input type="number" min="0" step="1" value="' + val + '"';
-            html += ' data-month="' + month + '"';
-            html += ' placeholder="ROs"';
-            html += ' class="ro-month-input">';
-            html += '</div>';
-        });
-        grid.innerHTML = html;
-
-        // Wire up change events
-        grid.querySelectorAll('.ro-month-input').forEach(function(input) {
-            input.addEventListener('input', function() {
-                var month = this.dataset.month;
-                var val = parseInt(this.value) || 0;
-                roData[month] = val;
-                renderAll();
-            });
-        });
-
-        document.getElementById('roSourceLabel').textContent =
-            roDataSource === 'file' ? 'Loaded from file \u2014 edit to override' : 'Manual entry \u2014 enter RO counts for each month';
-    }
-
-    function renderAll() {
-        renderSummaryCards();
-        renderTable();
-        renderChart();
-        renderTopItems();
-        updateSuggestedRate();
-    }
-
-    function setView(view) {
-        currentView = view;
-        document.querySelectorAll('.view-toggle button').forEach(function(b) { b.classList.remove('active'); });
-        event.target.classList.add('active');
-        renderAll();
-    }
-
-    document.getElementById('roRate').addEventListener('input', renderAll);
-
-    // ===== FILE IMPORT: COLUMN DETECTION PATTERNS =====
-    var ITEM_FIELD_PATTERNS = {
-        description: {
-            patterns: ['description', 'desc', 'itemdescription', 'itemdesc', 'item',
-                       'name', 'itemname', 'productname', 'product', 'partdescription',
-                       'partname', 'part'],
-            required: true
-        },
-        unitsSold: {
-            patterns: ['unitssold', 'units', 'qty', 'quantity', 'count', 'sold',
-                       'itemssold', 'qtyshipped', 'shipqty', 'volume', 'unitcount'],
-            required: true
-        },
-        retailPrice: {
-            patterns: ['retailprice', 'retail', 'listprice', 'list', 'price',
-                       'unitprice', 'sellprice', 'sellingprice', 'msrp',
-                       'retailpriceperunit', 'saleprice'],
-            required: true
-        },
-        ourCost: {
-            patterns: ['ourcost', 'cost', 'unitcost', 'costperunit', 'suppliercost',
-                       'purchasecost', 'buycost', 'wholesale', 'costprice',
-                       'vendorcost', 'acquisitioncost'],
-            required: true
-        },
-        month: {
-            patterns: ['month', 'period', 'date', 'mo', 'monthyear', 'monthname'],
-            required: true
-        },
-        ros: {
-            patterns: ['ros', 'rocount', 'repairorders', 'cpro', 'cpros',
-                       'repairorder', 'orders', 'roqty', 'numberofros', 'totalros'],
-            required: false
-        }
-    };
-
-    var RO_FIELD_PATTERNS = {
-        month: {
-            patterns: ['month', 'period', 'date', 'mo', 'monthyear'],
-            required: true
-        },
-        roCount: {
-            patterns: ['ros', 'rocount', 'repairorders', 'cpro', 'cpros',
-                       'repairorder', 'orders', 'roqty', 'numberofros',
-                       'count', 'rocount', 'totalros'],
-            required: true
-        }
-    };
-
-    // ===== FILE IMPORT: HELPERS =====
-    function canonicalize(header) {
-        return String(header).toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-    }
-
-    function parseNumber(val) {
-        if (typeof val === 'number') return val;
-        if (!val && val !== 0) return 0;
-        var cleaned = String(val).replace(/[$,\s]/g, '');
-        return parseFloat(cleaned);
-    }
-
-    // ===== FILE IMPORT: COLUMN DETECTION =====
-    function scoreMapping(headers, fieldPatterns) {
-        var mapping = {};
-        var score = 0;
-        var requiredMet = true;
-        var usedHeaders = new Set();
-
-        // Pass 1: exact canonical matches
-        for (var field in fieldPatterns) {
-            var config = fieldPatterns[field];
-            for (var h = 0; h < headers.length; h++) {
-                var header = headers[h];
-                if (usedHeaders.has(header)) continue;
-                var canon = canonicalize(header);
-                if (config.patterns.indexOf(canon) >= 0) {
-                    mapping[field] = header;
-                    usedHeaders.add(header);
-                    score += 10;
-                    break;
-                }
-            }
-        }
-
-        // Pass 2: substring/contains matches for unmapped fields
-        for (var field in fieldPatterns) {
-            if (mapping[field]) continue;
-            var config = fieldPatterns[field];
-            for (var h = 0; h < headers.length; h++) {
-                var header = headers[h];
-                if (usedHeaders.has(header)) continue;
-                var canon = canonicalize(header);
-                var match = config.patterns.some(function(p) { return canon.includes(p) || p.includes(canon); });
-                if (match) {
-                    mapping[field] = header;
-                    usedHeaders.add(header);
-                    score += 5;
-                    break;
-                }
-            }
-        }
-
-        for (var field in fieldPatterns) {
-            if (fieldPatterns[field].required && !mapping[field]) requiredMet = false;
-        }
-
-        return { mapping: mapping, score: score, requiredMet: requiredMet };
-    }
-
-    function detectSheetType(jsonRows) {
-        if (jsonRows.length === 0) return { type: 'unknown', mapping: {} };
-
-        var headers = Object.keys(jsonRows[0]);
-        var itemScore = scoreMapping(headers, ITEM_FIELD_PATTERNS);
-        var roScore = scoreMapping(headers, RO_FIELD_PATTERNS);
-
-        // Heuristic: item data sheets have many rows with diverse descriptions
-        // RO data sheets have few rows (one per month) with month-like values
-        var hasMonthValues = jsonRows.some(function(row) {
-            var firstVal = String(Object.values(row)[0]).toLowerCase();
-            return /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/.test(firstVal);
-        });
-
-        // If both could match, prefer items if it has more required fields matched
-        // and more rows (item data is typically many rows vs 12 for RO)
-        if (itemScore.requiredMet && roScore.requiredMet) {
-            // If few rows and month-like values, likely RO data
-            if (jsonRows.length <= 14 && hasMonthValues && headers.length <= 4) {
-                return { type: 'roData', mapping: roScore.mapping };
-            }
-            // Otherwise prefer item data if score is higher or equal
-            if (itemScore.score >= roScore.score) {
-                return { type: 'items', mapping: itemScore.mapping };
-            }
-            return { type: 'roData', mapping: roScore.mapping };
-        }
-
-        if (itemScore.requiredMet) {
-            return { type: 'items', mapping: itemScore.mapping };
-        }
-        if (roScore.requiredMet) {
-            return { type: 'roData', mapping: roScore.mapping };
-        }
-
-        return { type: 'unknown', mapping: {} };
-    }
-
-    // ===== FILE IMPORT: DATA PARSING =====
-    function parseItemData(jsonRows, mapping) {
-        var parsed = [];
-        var errors = [];
-        var extractedROs = {};  // Extract RO counts from item rows if column exists
-
-        jsonRows.forEach(function(row, i) {
-            var desc = String(row[mapping.description] || '').trim();
-            var unitsRaw = row[mapping.unitsSold];
-            var retailRaw = row[mapping.retailPrice];
-            var costRaw = row[mapping.ourCost];
-            var monthRaw = String(row[mapping.month] || '').trim();
-
-            if (!desc && !unitsRaw) return; // skip empty rows
-
-            var unitsSold = parseNumber(unitsRaw);
-            var retailPrice = parseNumber(retailRaw);
-            var ourCost = parseNumber(costRaw);
-            var month = normalizeMonth(monthRaw);
-
-            if (isNaN(unitsSold)) { errors.push('Row ' + (i+2) + ': invalid units "' + unitsRaw + '"'); return; }
-            if (isNaN(retailPrice)) { errors.push('Row ' + (i+2) + ': invalid retail price "' + retailRaw + '"'); return; }
-            if (isNaN(ourCost)) { errors.push('Row ' + (i+2) + ': invalid cost "' + costRaw + '"'); return; }
-
-            // Extract RO count if column exists (same value repeated per month)
-            if (mapping.ros && row[mapping.ros] !== undefined && row[mapping.ros] !== '') {
-                var roVal = parseNumber(row[mapping.ros]);
-                if (!isNaN(roVal) && roVal > 0 && month) {
-                    extractedROs[month] = Math.round(roVal);
-                }
-            }
-
-            parsed.push({
-                description: desc,
-                unitsSold: unitsSold,
-                retailPrice: retailPrice,
-                ourCost: ourCost,
-                month: month,
-                quarter: inferQuarter(month),
-                retailTotal: unitsSold * retailPrice,
-                costTotal: unitsSold * ourCost
-            });
-        });
-
-        return { data: parsed, errors: errors, extractedROs: extractedROs };
-    }
-
-    function parseROData(jsonRows, mapping) {
-        var parsed = {};
-        var errors = [];
-
-        jsonRows.forEach(function(row, i) {
-            var monthRaw = String(row[mapping.month] || '').trim();
-            var roRaw = row[mapping.roCount];
-
-            if (!monthRaw) return;
-
-            var roCount = parseNumber(roRaw);
-            if (isNaN(roCount) || roCount < 0) {
-                errors.push('Row ' + (i+2) + ': invalid RO count "' + roRaw + '"');
-                return;
-            }
-
-            var month = normalizeMonth(monthRaw);
-            parsed[month] = Math.round(roCount);
-        });
-
-        return { data: parsed, errors: errors };
-    }
-
-    // ===== FILE IMPORT: FEEDBACK UI =====
-    function showFeedback(type, message) {
-        var el = document.getElementById('importFeedback');
-        el.className = 'import-feedback ' + type;
-        el.innerHTML = message;
-        el.style.display = 'block';
-    }
-
-    function buildMappingTable(mapping, patterns) {
-        var html = '<table style="margin:8px 0;font-size:0.9em;border-collapse:collapse;">';
-        for (var field in patterns) {
-            var config = patterns[field];
-            var mapped = mapping[field];
-            var icon = mapped ? '&#10003;' : (config.required ? '&#10007;' : '&mdash;');
-            var color = mapped ? '#059669' : (config.required ? '#dc2626' : '#888');
-            html += '<tr>';
-            html += '<td style="padding:2px 12px 2px 0;color:' + color + '">' + icon + '</td>';
-            html += '<td style="padding:2px 12px 2px 0;font-weight:600">' + field + '</td>';
-            html += '<td style="padding:2px 0;color:#666">' + (mapped ? '&larr; "' + mapped + '"' : '(not found)') + '</td>';
-            html += '</tr>';
-        }
-        html += '</table>';
-        return html;
-    }
-
-    // ===== FILE IMPORT: ORCHESTRATION =====
-    function processWorkbook(workbook, filename) {
-        var results = { items: null, roData: null, warnings: [], itemsMapping: {}, roMapping: {} };
-
-        // Iterate sheets looking for item data and RO data
-        for (var s = 0; s < workbook.SheetNames.length; s++) {
-            var name = workbook.SheetNames[s];
-            var sheet = workbook.Sheets[name];
-            var json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-            if (json.length === 0) continue;
-
-            var detection = detectSheetType(json);
-
-            if (detection.type === 'items' && !results.items) {
-                results.items = parseItemData(json, detection.mapping);
-                results.itemsMapping = detection.mapping;
-            } else if (detection.type === 'roData' && !results.roData) {
-                results.roData = parseROData(json, detection.mapping);
-                results.roMapping = detection.mapping;
-            }
-        }
-
-        applyImportedData(results, filename);
-    }
-
-    function applyImportedData(results, filename) {
-        var hasData = false;
-        var html = '<strong>Imported: ' + filename + '</strong>';
-
-        // Clear previous data
-        itemData = [];
-        roData = {};
-
-        if (results.items && results.items.data.length > 0) {
-            itemData = results.items.data;
-            hasData = true;
-            var months = getMonthsInData();
-            html += '<br><br><strong>Item Data</strong> \u2014 ' + itemData.length + ' rows across ' + months.length + ' months';
-            html += ':' + buildMappingTable(results.itemsMapping, ITEM_FIELD_PATTERNS);
-            if (results.items.errors.length > 0) {
-                html += '<div style="color:#92400e;margin-top:4px;"><strong>Warnings:</strong><br>';
-                results.items.errors.forEach(function(e) { html += '&bull; ' + e + '<br>'; });
-                html += '</div>';
-            }
-        }
-
-        if (results.roData && Object.keys(results.roData.data).length > 0) {
-            roData = results.roData.data;
-            roDataSource = 'file';
-            html += '<br><strong>RO Data</strong> \u2014 ' + Object.keys(roData).length + ' months loaded';
-            html += ':' + buildMappingTable(results.roMapping, RO_FIELD_PATTERNS);
-            if (results.roData.errors.length > 0) {
-                html += '<div style="color:#92400e;margin-top:4px;"><strong>Warnings:</strong><br>';
-                results.roData.errors.forEach(function(e) { html += '&bull; ' + e + '<br>'; });
-                html += '</div>';
-            }
-        } else if (results.items && results.items.extractedROs && Object.keys(results.items.extractedROs).length > 0) {
-            // RO counts were embedded in the item data rows
-            roData = results.items.extractedROs;
-            roDataSource = 'file';
-            html += '<br><strong>RO Data</strong> \u2014 ' + Object.keys(roData).length + ' months loaded from ROs column';
-        } else if (hasData) {
-            roDataSource = 'manual';
-            html += '<br><strong>RO Data</strong> \u2014 not found in file. Enter RO counts manually below.';
-        }
-
-        if (!hasData) {
-            showFeedback('error',
-                'No valid item data found in "' + filename + '".<br><br>' +
-                '<strong>Expected columns like:</strong> Description, Units Sold, Retail Price, Our Cost, Month');
-            return;
-        }
-
-        // Auto-calculate and set suggested rate
-        var suggestedRate = calcSuggestedRate();
-        if (suggestedRate > 0) {
-            document.getElementById('roRate').value = suggestedRate.toFixed(2);
-        }
-
-        // Update subtitle with customer name from filename
-        var customerName = filename.replace(/\.(csv|xlsx|xls)$/i, '').replace(/[-_]/g, ' ').trim();
-        document.getElementById('subtitleText').innerHTML = '<strong>' + customerName + '</strong>';
-        document.getElementById('importStatus').textContent = '';
-        showFeedback('success', html);
-
-        renderROEntryFields();
-        renderAll();
-    }
-
-    function handleFile(file) {
-        var extension = file.name.split('.').pop().toLowerCase();
-
-        if (['csv', 'xlsx', 'xls'].indexOf(extension) < 0) {
-            showFeedback('error', 'Unsupported file type. Please upload a CSV, XLSX, or XLS file.');
-            return;
-        }
-
-        if (typeof XLSX === 'undefined') {
-            showFeedback('error', 'Excel support requires the SheetJS library. Check your internet connection and reload the page.');
-            return;
-        }
-
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = new Uint8Array(e.target.result);
-                var workbook = XLSX.read(data, { type: 'array' });
-                processWorkbook(workbook, file.name);
-            } catch (err) {
-                showFeedback('error', 'Failed to parse file: ' + err.message);
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    function clearData() {
-        itemData = [];
-        roData = {};
-        roDataSource = 'manual';
-        document.getElementById('subtitleText').innerHTML = 'Upload a file to get started';
-        document.getElementById('importStatus').textContent = '';
-        document.getElementById('importFeedback').style.display = 'none';
-        document.getElementById('fileInput').value = '';
-        document.getElementById('roEntrySection').style.display = 'none';
-        document.getElementById('roRate').value = '0.00';
-        renderAll();
-    }
-
-    function openImportModal() {
-        document.getElementById('importOverlay').classList.add('active');
-    }
-
-    function closeImportModal() {
-        document.getElementById('importOverlay').classList.remove('active');
-    }
-
-    // ===== EVENT WIRING =====
-    document.getElementById('clearDataBtn').addEventListener('click', clearData);
-    document.getElementById('newCustomerBtn').addEventListener('click', openImportModal);
-    document.getElementById('importCloseBtn').addEventListener('click', closeImportModal);
-    document.getElementById('importOverlay').addEventListener('click', function(e) {
-        if (e.target === this) closeImportModal();
+    // Annual
+    var total = { period: 'Total', roCount: 0, priceListTotal: 0, perROTotal: 0, difference: 0 };
+    monthly.forEach(function(m) {
+        total.roCount += m.roCount;
+        total.priceListTotal += m.priceListTotal;
+        total.perROTotal += m.perROTotal;
+    });
+    total.difference = total.perROTotal - total.priceListTotal;
+    return [total];
+}
+
+function renderBreakdownTable() {
+    var data = getBreakdownData();
+    var html = '<thead><tr><th>Period</th><th>ROs</th><th>Price List Total</th><th>Per-RO Total</th><th>Difference</th></tr></thead><tbody>';
+
+    var totals = { roCount: 0, priceListTotal: 0, perROTotal: 0, difference: 0 };
+    data.forEach(function(d) {
+        totals.roCount += d.roCount;
+        totals.priceListTotal += d.priceListTotal;
+        totals.perROTotal += d.perROTotal;
+        totals.difference += d.difference;
+
+        var dc = d.difference > 0 ? 'diff-positive' : d.difference < 0 ? 'diff-negative' : '';
+        html += '<tr><td>' + d.period + '</td><td>' + d.roCount.toLocaleString() + '</td>';
+        html += '<td>' + fmt(d.priceListTotal) + '</td><td>' + fmt(d.perROTotal) + '</td>';
+        html += '<td class="' + dc + '">' + fmtSigned(d.difference) + '</td></tr>';
     });
 
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+    if (data.length > 1) {
+        var dc = totals.difference > 0 ? 'diff-positive' : totals.difference < 0 ? 'diff-negative' : '';
+        html += '<tr class="total-row"><td>TOTAL</td><td>' + totals.roCount.toLocaleString() + '</td>';
+        html += '<td>' + fmt(totals.priceListTotal) + '</td><td>' + fmt(totals.perROTotal) + '</td>';
+        html += '<td class="' + dc + '">' + fmtSigned(totals.difference) + '</td></tr>';
+    }
+
+    html += '</tbody>';
+    document.getElementById('breakdownTable').innerHTML = html;
+}
+
+function renderChart() {
+    var data = getBreakdownData();
+    var container = document.getElementById('chartContainer');
+    if (data.length === 0) { container.innerHTML = ''; return; }
+
+    var maxVal = Math.max.apply(null, data.map(function(d) {
+        return Math.max(d.priceListTotal, d.perROTotal);
+    })) * 1.1;
+    if (maxVal === 0) { container.innerHTML = ''; return; }
+
+    var html = '<div class="chart-y-axis">';
+    for (var i = 4; i >= 0; i--) {
+        var val = (maxVal / 4) * i;
+        html += '<div class="chart-y-label">$' + (val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(0)) + '</div>';
+    }
+    html += '</div>';
+
+    data.forEach(function(d) {
+        var plHeight = (d.priceListTotal / maxVal) * 260;
+        var roHeight = (d.perROTotal / maxVal) * 260;
+        var label = state.currentView === 'monthly' ? d.period.replace(/\s*\d{4}/, '').substring(0, 3) : d.period;
+
+        html += '<div class="chart-bar-group"><div class="chart-bars">';
+        html += '<div class="chart-bar pricelist" style="height:' + plHeight + 'px" title="Price List: ' + fmt(d.priceListTotal) + '"></div>';
+        html += '<div class="chart-bar perro" style="height:' + roHeight + 'px" title="Per-RO: ' + fmt(d.perROTotal) + '"></div>';
+        html += '</div><div class="chart-label">' + label + '</div></div>';
     });
 
-    document.getElementById('browseLink').addEventListener('click', function(e) {
+    container.innerHTML = html;
+}
+
+function renderTopItems() {
+    var matched = state.matchResults.matched;
+    if (!matched.length) {
+        document.getElementById('topItemsContainer').innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No matched items.</p>';
+        return;
+    }
+
+    var agg = {};
+    matched.forEach(function(m) {
+        var key = m.priceListDesc;
+        if (!agg[key]) agg[key] = { desc: key, total: 0, qty: 0 };
+        agg[key].total += m.extendedPrice;
+        agg[key].qty += m.quantity;
+    });
+
+    var sorted = Object.values(agg).sort(function(a, b) { return b.total - a.total; }).slice(0, 15);
+    if (sorted.length === 0) return;
+
+    var maxVal = sorted[0].total;
+    var html = '';
+    sorted.forEach(function(item, i) {
+        var pct = maxVal > 0 ? (item.total / maxVal) * 100 : 0;
+        html += '<div class="item-bar-row">';
+        html += '<div class="item-rank">' + (i + 1) + '</div>';
+        html += '<div class="item-name" title="' + item.desc + '">' + item.desc + '</div>';
+        html += '<div class="item-bar-container"><div class="item-bar-fill" style="width:' + pct + '%"></div></div>';
+        html += '<div class="item-cost">' + fmt(item.total) + '</div>';
+        html += '</div>';
+    });
+    document.getElementById('topItemsContainer').innerHTML = html;
+}
+
+function renderUnmatched() {
+    var unmatched = state.matchResults.unmatched;
+    var card = document.getElementById('unmatchedCard');
+
+    if (unmatched.length === 0) {
+        card.style.display = 'none';
+        return;
+    }
+    card.style.display = 'block';
+
+    var pct = (unmatched.length / state.invoiceItems.length * 100).toFixed(1);
+    document.getElementById('unmatchedTitle').textContent = 'Unmatched Invoice Items (' + unmatched.length + ')';
+
+    var html = '<div class="unmatched-warning"><strong>Warning:</strong> ' + unmatched.length + ' items (' + pct + '% of total) could not be matched to the price list and are <strong>NOT included</strong> in the Price List Total. Review for accuracy.</div>';
+
+    html += '<div class="preview-table-wrap" style="max-height:400px;"><table class="preview-table"><thead><tr><th>Description</th><th>Qty</th><th>RO #</th><th>Month</th></tr></thead><tbody>';
+
+    // Aggregate unmatched by description
+    var aggUnmatched = {};
+    unmatched.forEach(function(u) {
+        var key = normalizeForMatch(u.description);
+        if (!aggUnmatched[key]) aggUnmatched[key] = { description: u.description, qty: 0, roCount: 0, ros: new Set() };
+        aggUnmatched[key].qty += u.quantity;
+        aggUnmatched[key].ros.add(u.roNumber);
+    });
+
+    var sortedUnmatched = Object.values(aggUnmatched).sort(function(a, b) { return b.qty - a.qty; });
+    sortedUnmatched.forEach(function(u) {
+        html += '<tr><td>' + u.description + '</td><td>' + u.qty + '</td><td>' + u.ros.size + ' ROs</td><td></td></tr>';
+    });
+
+    html += '</tbody></table></div>';
+    document.getElementById('unmatchedBody').innerHTML = html;
+    document.getElementById('unmatchedBody').classList.add('open');
+}
+
+function renderMatchDetail() {
+    var matched = state.matchResults.matched;
+    if (!matched.length) {
+        document.getElementById('matchDetailCard').style.display = 'none';
+        return;
+    }
+
+    // Aggregate by unique invoice desc -> price list desc mapping
+    var agg = {};
+    matched.forEach(function(m) {
+        var key = normalizeForMatch(m.invoiceDesc) + '||' + normalizeForMatch(m.priceListDesc);
+        if (!agg[key]) {
+            agg[key] = {
+                invoiceDesc: m.invoiceDesc,
+                priceListDesc: m.priceListDesc,
+                matchScore: m.matchScore,
+                matchType: m.matchType,
+                qty: 0,
+                listPrice: m.listPrice,
+                total: 0
+            };
+        }
+        agg[key].qty += m.quantity;
+        agg[key].total += m.extendedPrice;
+    });
+
+    var sorted = Object.values(agg).sort(function(a, b) { return b.total - a.total; });
+
+    var html = '<div class="preview-table-wrap" style="max-height:500px;"><table class="preview-table"><thead><tr>';
+    html += '<th>Invoice Item</th><th>Matched Price List Item</th><th>Match</th><th>Qty</th><th>List Price</th><th>Extended</th>';
+    html += '</tr></thead><tbody>';
+
+    sorted.forEach(function(m) {
+        var badgeClass = m.matchScore >= 0.9 ? 'exact' : m.matchScore >= 0.6 ? 'fuzzy' : 'low';
+        var badgeText = m.matchScore >= 0.9 ? 'Exact' : m.matchScore >= 0.6 ? 'Fuzzy' : 'Low';
+        html += '<tr>';
+        html += '<td>' + m.invoiceDesc + '</td>';
+        html += '<td>' + m.priceListDesc + '</td>';
+        html += '<td><span class="match-badge ' + badgeClass + '">' + badgeText + ' ' + (m.matchScore * 100).toFixed(0) + '%</span></td>';
+        html += '<td style="text-align:right">' + m.qty + '</td>';
+        html += '<td style="text-align:right">' + fmt(m.listPrice) + '</td>';
+        html += '<td style="text-align:right">' + fmt(m.total) + '</td>';
+        html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    document.getElementById('matchDetailBody').innerHTML = html;
+}
+
+function setView(view, btn) {
+    state.currentView = view;
+    document.querySelectorAll('.view-toggle button').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderBreakdownTable();
+    renderChart();
+}
+
+function toggleSection(name) {
+    var body = document.getElementById(name + 'Body');
+    var icon = document.getElementById(name + 'Toggle');
+    body.classList.toggle('open');
+    icon.innerHTML = body.classList.contains('open') ? '&#9660;' : '&#9654;';
+}
+
+// ===== EVENT WIRING =====
+function wireDropZone(zoneId, fileInputId, browseId, handler) {
+    var zone = document.getElementById(zoneId);
+    var fileInput = document.getElementById(fileInputId);
+    var browse = document.getElementById(browseId);
+
+    zone.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'A') fileInput.click();
+    });
+    browse.addEventListener('click', function(e) {
         e.preventDefault();
-        document.getElementById('fileInput').click();
+        fileInput.click();
     });
-
-    document.getElementById('dropZone').addEventListener('click', function(e) {
-        if (e.target.id !== 'browseLink') document.getElementById('fileInput').click();
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) handler(e.target.files[0]);
     });
-
-    var dropZone = document.getElementById('dropZone');
-    dropZone.addEventListener('dragover', function(e) {
+    zone.addEventListener('dragover', function(e) {
         e.preventDefault();
-        dropZone.classList.add('drag-over');
+        zone.classList.add('drag-over');
     });
-    dropZone.addEventListener('dragleave', function() {
-        dropZone.classList.remove('drag-over');
+    zone.addEventListener('dragleave', function() {
+        zone.classList.remove('drag-over');
     });
-    dropZone.addEventListener('drop', function(e) {
+    zone.addEventListener('drop', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+        zone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) handler(e.dataTransfer.files[0]);
     });
+}
 
-    document.getElementById('useSuggestedBtn').addEventListener('click', function() {
-        var rate = calcSuggestedRate();
-        document.getElementById('roRate').value = rate.toFixed(2);
-        renderAll();
-    });
-
-    // Initial render (empty state)
-    renderAll();
-    </script>
+wireDropZone('priceListDropZone', 'priceListFile', 'priceListBrowse', handlePriceListFile);
+wireDropZone('invoiceDropZone', 'invoiceFile', 'invoiceBrowse', handleInvoiceFile);
+</script>
 </body>
 </html>
