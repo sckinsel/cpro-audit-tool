@@ -873,6 +873,76 @@ function parseInvoices(jsonRows, mapping) {
     return { data: parsed, errors: errors };
 }
 
+// ===== MORITZ-FORMAT INVOICE PARSER =====
+// Handles the 2-row-header summary format:
+//   Row 0: meta/period row  (e.g. "Total | Mar 2026 | Mar 2026 | COGS")
+//   Row 1: column name row  (e.g. "Dealer | Description | Value | Quantity | Item Price | COGS")
+//   Row 2: TOTAL summary row — skip
+//   Row 3+: item rows
+
+function detectMoritzInvoiceFormat(sheet) {
+    // Read first 3 rows as raw arrays
+    var raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    if (raw.length < 3) return null;
+
+    var row0 = raw[0];
+    var row1 = raw[1];
+
+    // Row 0 must contain a "Mon YYYY" period cell
+    var period = null;
+    var MONTH_RE = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s\-]+(\d{4})\b/i;
+    for (var c = 0; c < row0.length; c++) {
+        var m = MONTH_RE.exec(String(row0[c]));
+        if (m) {
+            var mon = m[1].charAt(0).toUpperCase() + m[1].slice(1, 3).toLowerCase();
+            period = mon + ' ' + m[2];
+            break;
+        }
+    }
+    if (!period) return null;
+
+    // Row 1 must contain "Description"
+    var descCol = -1, qtyCol = -1, itemCodeCol = 0, valueCol = -1, itemPriceCol = -1;
+    for (var c = 0; c < row1.length; c++) {
+        var v = String(row1[c]).trim().toLowerCase();
+        if (v === 'description')   descCol       = c;
+        else if (v === 'quantity') qtyCol        = c;
+        else if (v === 'value')    valueCol      = c;
+        else if (v === 'item price' || v === 'itemprice') itemPriceCol = c;
+    }
+    if (descCol < 0) return null;
+
+    return { period: period, descCol: descCol, qtyCol: qtyCol, itemCodeCol: itemCodeCol,
+             valueCol: valueCol, itemPriceCol: itemPriceCol, raw: raw };
+}
+
+function parseMoritzInvoice(fmt) {
+    var parsed = [];
+    // raw[0]=period header, raw[1]=col names, raw[2]=TOTAL row → start at index 3
+    for (var r = 3; r < fmt.raw.length; r++) {
+        var row = fmt.raw[r];
+        var itemCode = String(row[fmt.itemCodeCol] || '').trim();
+        var desc     = String(row[fmt.descCol]     || '').trim();
+        if (!desc) continue;
+
+        // Skip any stray TOTAL/subtotal rows (including "CPRO Total" footer)
+        if (/total/i.test(itemCode) || /^total$/i.test(desc)) continue;
+        // Skip rows where description looks like a raw number (not a product name)
+        if (/^\d+(\.\d+)?$/.test(desc)) continue;
+
+        var qty = fmt.qtyCol >= 0 ? parseNumber(row[fmt.qtyCol]) : 1;
+        if (isNaN(qty) || qty <= 0) qty = 1;
+
+        parsed.push({
+            roNumber:    itemCode || desc.substring(0, 20),
+            description: desc,
+            quantity:    qty,
+            month:       fmt.period
+        });
+    }
+    return { data: parsed, errors: [] };
+}
+
 // ===== WIZARD NAVIGATION =====
 function goToStep(stepNum) {
     state.step = stepNum;
@@ -988,6 +1058,33 @@ function handleInvoiceFile(file) {
     if (!file) return;
     readAndParseFile(file, function(workbook) {
         var sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        // ── Try Moritz summary-invoice format first ──────────────────────────
+        var moritzFmt = detectMoritzInvoiceFormat(sheet);
+        if (moritzFmt) {
+            var parsed = parseMoritzInvoice(moritzFmt);
+            if (parsed.data.length === 0) {
+                showUploadFeedback('invoiceFeedback', 'error', 'No valid rows found in summary invoice.');
+                return;
+            }
+            state.invoiceItems = parsed.data;
+            state.invoiceFile  = file.name;
+
+            var html = '<strong>' + file.name + '</strong> &mdash; ' +
+                       parsed.data.length + ' line items, period: <strong>' + moritzFmt.period + '</strong>' +
+                       ' <span style="color:#059669;">(summary invoice format detected)</span>';
+            showUploadFeedback('invoiceFeedback', 'success', html);
+
+            showPreviewTable('invoicePreview', parsed.data.slice(0, 8),
+                ['roNumber', 'description', 'quantity', 'month'],
+                ['Item Code', 'Description', 'Qty', 'Month']);
+
+            document.getElementById('invoiceDropZone').classList.add('uploaded');
+            document.getElementById('step2Next').disabled = false;
+            return;
+        }
+
+        // ── Standard column-detection path ───────────────────────────────────
         var json = XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true });
         if (json.length === 0) {
             showUploadFeedback('invoiceFeedback', 'error', 'File appears to be empty.');
