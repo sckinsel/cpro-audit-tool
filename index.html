@@ -329,7 +329,7 @@
         <div class="step-line" data-after="1"></div>
         <div class="step-item" data-step="2">
             <div class="step-circle">2</div>
-            <span class="step-label">Invoices</span>
+            <span class="step-label">Units Sold</span>
         </div>
         <div class="step-line" data-after="2"></div>
         <div class="step-item" data-step="3">
@@ -372,11 +372,11 @@
             </div>
         </div>
 
-        <!-- Step 2: Invoices -->
+        <!-- Step 2: Units Sold -->
         <div class="step-panel" id="step2">
             <div class="card">
-                <h2>Upload Invoices</h2>
-                <p style="color:#666;font-size:0.9em;margin-bottom:16px;">Upload the invoices for the audit period (a month or fiscal quarter). The tool will look for columns like RO#, Description, Quantity, and Date.</p>
+                <h2>Upload Units Sold</h2>
+                <p style="color:#666;font-size:0.9em;margin-bottom:16px;">Upload a file with item descriptions and quantities sold for the period. Any CSV or Excel file with an item column and a quantity column will work.</p>
                 <div class="drop-zone" id="invoiceDropZone">
                     <input type="file" id="invoiceFile" accept=".csv,.xlsx,.xls" hidden>
                     <div class="drop-zone-content">
@@ -385,21 +385,12 @@
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
-                        <span>Drop invoice file here or <a href="#" id="invoiceBrowse">browse</a></span>
+                        <span>Drop file here or <a href="#" id="invoiceBrowse">browse</a></span>
                         <span class="drop-zone-formats">CSV, XLSX, XLS</span>
                     </div>
                 </div>
                 <div id="invoiceFeedback" style="display:none;"></div>
                 <div id="invoicePreview" style="display:none;" class="preview-section"></div>
-                <div id="moritzROCountWrap" style="display:none; margin-top:16px; padding:14px 16px; background:#fef9c3; border-radius:8px; border:1px solid #fde047;">
-                    <label style="font-weight:600; font-size:0.9em; color:#854d0e; display:block; margin-bottom:4px;">&#128221; Summary Invoice &mdash; Enter Actual RO Count</label>
-                    <p style="font-size:0.85em; color:#92400e; margin:0 0 10px;">This invoice uses item codes instead of individual RO numbers. Enter the actual number of repair orders for this period so the audit math is correct.</p>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="number" id="moritzROCount" min="1" step="1" placeholder="e.g. 450"
-                               style="width:130px; padding:8px 12px; border:1px solid #fde047; border-radius:6px; font-size:1em; background:#fff;">
-                        <span style="font-size:0.9em; color:#92400e;">repair orders this period</span>
-                    </div>
-                </div>
                 <div class="step-actions">
                     <button class="btn-secondary" onclick="goToStep(1)">&larr; Back</button>
                     <button class="btn-primary" id="step2Next" disabled onclick="goToStep(3)">Continue &rarr;</button>
@@ -498,8 +489,7 @@ var state = {
     invoiceFile: '',
     perRORate: 0,
     matchResults: null,
-    currentView: 'monthly',
-    isMoritzFormat: false
+    currentView: 'monthly'
 };
 
 var MONTH_ORDER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
@@ -971,25 +961,13 @@ function goToStep(stepNum) {
     updateStepper();
 
     if (stepNum === 3) {
-        var uniqueROs3 = new Set(state.invoiceItems.map(function(i) { return i.roNumber; }));
-        var months = getInvoiceMonths();
-        // Pre-fill Step 3 RO count from Step 2 Moritz input if available
-        var moritzVal = state.isMoritzFormat ? parseInt(document.getElementById('moritzROCount').value, 10) : NaN;
         var step3Input = document.getElementById('step3ROCount');
         if (!step3Input.value) {
-            if (!isNaN(moritzVal) && moritzVal > 0) {
-                step3Input.value = moritzVal;
-            } else if (!state.isMoritzFormat) {
-                step3Input.value = uniqueROs3.size;
-            }
+            step3Input.value = '';
         }
-        var hint = state.isMoritzFormat
-            ? 'Summary invoice detected — verify or update this number.'
-            : 'Auto-filled from invoice (' + uniqueROs3.size + ' unique ROs). Edit if needed.';
-        document.getElementById('step3ROCountHint').textContent = hint;
-        var months2 = getInvoiceMonths();
+        document.getElementById('step3ROCountHint').textContent = 'Enter the total number of repair orders for the period being audited.';
         document.getElementById('rateContext').innerHTML =
-            'Period(s): <strong>' + months2.join(', ') + '</strong>';
+            '<strong>' + state.invoiceItems.length + '</strong> items loaded from <strong>' + state.invoiceFile + '</strong>';
     }
 }
 
@@ -1031,11 +1009,8 @@ function startOver() {
     document.getElementById('perRORate').value = '';
     document.getElementById('priceListFile').value = '';
     document.getElementById('invoiceFile').value = '';
-    document.getElementById('moritzROCountWrap').style.display = 'none';
-    document.getElementById('moritzROCount').value = '';
     document.getElementById('step3ROCount').value = '';
     document.getElementById('step3ROCountHint').textContent = '';
-    state.isMoritzFormat = false;
 
     goToStep(1);
 }
@@ -1095,78 +1070,68 @@ function handleInvoiceFile(file) {
     if (!file) return;
     readAndParseFile(file, function(workbook) {
         var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-        // ── Try Moritz summary-invoice format first ──────────────────────────
-        var moritzFmt = detectMoritzInvoiceFormat(sheet);
-        if (moritzFmt) {
-            var parsed = parseMoritzInvoice(moritzFmt);
-            if (parsed.data.length === 0) {
-                showUploadFeedback('invoiceFeedback', 'error', 'No valid rows found in summary invoice.');
-                return;
-            }
-            state.invoiceItems = parsed.data;
-            state.invoiceFile  = file.name;
-
-            var html = '<strong>' + file.name + '</strong> &mdash; ' +
-                       parsed.data.length + ' line items, period: <strong>' + moritzFmt.period + '</strong>' +
-                       ' <span style="color:#059669;">(summary invoice format detected)</span>';
-            showUploadFeedback('invoiceFeedback', 'success', html);
-
-            showPreviewTable('invoicePreview', parsed.data.slice(0, 8),
-                ['roNumber', 'description', 'quantity', 'month'],
-                ['Item Code', 'Description', 'Qty', 'Month']);
-
-            state.isMoritzFormat = true;
-            document.getElementById('invoiceDropZone').classList.add('uploaded');
-            document.getElementById('moritzROCountWrap').style.display = 'block';
-            document.getElementById('moritzROCount').value = '';
-            document.getElementById('step2Next').disabled = false;
-            return;
-        }
-
-        // ── Standard column-detection path ───────────────────────────────────
-        var json = XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true });
-        if (json.length === 0) {
+        if (raw.length < 2) {
             showUploadFeedback('invoiceFeedback', 'error', 'File appears to be empty.');
             return;
         }
 
-        var headers = Object.keys(json[0]);
-        var result = scoreMapping(headers, INVOICE_PATTERNS);
+        // Find first row with at least 2 non-empty cells — treat as header
+        var headerRowIdx = 0;
+        for (var i = 0; i < Math.min(6, raw.length); i++) {
+            if (raw[i].filter(function(c) { return String(c).trim() !== ''; }).length >= 2) {
+                headerRowIdx = i;
+                break;
+            }
+        }
 
-        if (!result.requiredMet) {
-            showUploadFeedback('invoiceFeedback', 'error',
-                'Could not find required columns (RO Number and Description).<br>' +
-                'Found columns: ' + headers.map(function(h) { return '"' + h + '"'; }).join(', '));
+        var headers = raw[headerRowIdx].map(function(h) { return String(h).trim(); });
+
+        // Detect description and quantity columns by header name
+        var descCol = -1, qtyCol = -1;
+        var DESC_RE = /desc|item|product|name|service|part|code/i;
+        var QTY_RE  = /qty|quant|unit|count|sold|amount/i;
+        for (var c = 0; c < headers.length; c++) {
+            if (descCol < 0 && DESC_RE.test(headers[c])) descCol = c;
+            if (qtyCol  < 0 && QTY_RE.test(headers[c]))  qtyCol  = c;
+        }
+        // Fallback: first two non-empty header columns
+        if (descCol < 0) {
+            for (var c = 0; c < headers.length; c++) { if (headers[c]) { descCol = c; break; } }
+        }
+        if (qtyCol < 0) {
+            for (var c = 0; c < headers.length; c++) { if (c !== descCol && headers[c]) { qtyCol = c; break; } }
+        }
+
+        // Parse data rows
+        var items = [];
+        for (var r = headerRowIdx + 1; r < raw.length; r++) {
+            var row = raw[r];
+            var desc = String(row[descCol] || '').trim();
+            if (!desc) continue;
+            if (/total/i.test(desc)) continue;          // skip summary/total rows
+            var qty = parseNumber(row[qtyCol]);
+            if (isNaN(qty) || qty <= 0) qty = 1;
+            items.push({ roNumber: '', description: desc, quantity: qty, month: 'Current Period' });
+        }
+
+        if (items.length === 0) {
+            showUploadFeedback('invoiceFeedback', 'error', 'No valid rows found. Check that the file has item and quantity columns.');
             return;
         }
 
-        var parsed = parseInvoices(json, result.mapping);
-        if (parsed.data.length === 0) {
-            showUploadFeedback('invoiceFeedback', 'error', 'No valid rows found.');
-            return;
-        }
+        state.invoiceItems = items;
+        state.invoiceFile  = file.name;
 
-        state.invoiceItems = parsed.data;
-        state.invoiceFile = file.name;
-
-        var uniqueROs = new Set(parsed.data.map(function(i) { return i.roNumber; }));
-        var months = getInvoiceMonths();
-        var html = '<strong>' + file.name + '</strong> &mdash; ' + parsed.data.length + ' line items, ' +
-                   uniqueROs.size + ' unique ROs, ' + months.length + ' month(s)';
-        html += buildMappingHtml(result.mapping, INVOICE_PATTERNS);
-        if (parsed.errors.length > 0) {
-            html += '<br><span style="color:#92400e;">' + parsed.errors.length + ' rows skipped</span>';
-        }
+        var html = '<strong>' + file.name + '</strong> &mdash; ' + items.length + ' items loaded';
+        html += ' <span style="color:#666;font-size:0.9em;">(detected columns: &ldquo;' +
+                headers[descCol] + '&rdquo; &amp; &ldquo;' + headers[qtyCol] + '&rdquo;)</span>';
         showUploadFeedback('invoiceFeedback', 'success', html);
 
-        // Preview
-        showPreviewTable('invoicePreview', parsed.data.slice(0, 8),
-            ['roNumber', 'description', 'quantity', 'month'],
-            ['RO #', 'Description', 'Qty', 'Month']);
+        showPreviewTable('invoicePreview', items.slice(0, 8),
+            ['description', 'quantity'], ['Item', 'Qty']);
 
-        state.isMoritzFormat = false;
-        document.getElementById('moritzROCountWrap').style.display = 'none';
         document.getElementById('invoiceDropZone').classList.add('uploaded');
         document.getElementById('step2Next').disabled = false;
     });
@@ -1338,23 +1303,16 @@ function renderSummaryCards() {
 
 function getMonthlyBreakdown() {
     var matched = state.matchResults.matched;
-    var months = getInvoiceMonths();
-
-    return months.map(function(month) {
-        var monthMatched = matched.filter(function(m) { return m.month === month; });
-        var plTotal = monthMatched.reduce(function(s, m) { return s + m.extendedPrice; }, 0);
-        var monthROs = new Set(state.invoiceItems.filter(function(i) { return i.month === month; }).map(function(i) { return i.roNumber; }));
-        var roCount = monthROs.size;
-        var perROTotal = roCount * state.perRORate;
-
-        return {
-            period: month,
-            roCount: roCount,
-            priceListTotal: plTotal,
-            perROTotal: perROTotal,
-            difference: perROTotal - plTotal
-        };
-    });
+    var roCount = state.auditCalc.roCount;
+    var plTotal = matched.reduce(function(s, m) { return s + m.extendedPrice; }, 0);
+    var perROTotal = roCount * state.perRORate;
+    return [{
+        period: 'Current Period',
+        roCount: roCount,
+        priceListTotal: plTotal,
+        perROTotal: perROTotal,
+        difference: perROTotal - plTotal
+    }];
 }
 
 function getBreakdownData() {
