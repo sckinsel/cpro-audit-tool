@@ -422,6 +422,14 @@
                         </div>
                         <div class="rate-context" id="rateContext"></div>
                     </div>
+                    <div style="margin-top:18px;">
+                        <label>RO Count for This Period:</label>
+                        <div class="rate-input-group">
+                            <input type="number" id="step3ROCount" min="1" step="1" placeholder="e.g. 450" style="max-width:130px;">
+                            <span>ROs</span>
+                        </div>
+                        <div style="font-size:0.82em;color:#888;margin-top:4px;" id="step3ROCountHint"></div>
+                    </div>
                 </div>
                 <div class="step-actions">
                     <button class="btn-secondary" onclick="goToStep(2)">&larr; Back</button>
@@ -965,15 +973,23 @@ function goToStep(stepNum) {
     if (stepNum === 3) {
         var uniqueROs3 = new Set(state.invoiceItems.map(function(i) { return i.roNumber; }));
         var months = getInvoiceMonths();
-        var manualRO3 = state.isMoritzFormat ? parseInt(document.getElementById('moritzROCount').value, 10) : NaN;
-        var roCount3 = (!isNaN(manualRO3) && manualRO3 > 0) ? manualRO3 : uniqueROs3.size;
-        var roLabel = (state.isMoritzFormat && !isNaN(manualRO3) && manualRO3 > 0)
-            ? '<strong>' + manualRO3.toLocaleString() + '</strong> ROs (manually entered)'
-            : state.isMoritzFormat
-                ? '<strong>' + uniqueROs3.size + '</strong> line items &mdash; <span style="color:#b45309;">enter RO count above for accurate results</span>'
-                : '<strong>' + uniqueROs3.size + '</strong> unique ROs found';
+        // Pre-fill Step 3 RO count from Step 2 Moritz input if available
+        var moritzVal = state.isMoritzFormat ? parseInt(document.getElementById('moritzROCount').value, 10) : NaN;
+        var step3Input = document.getElementById('step3ROCount');
+        if (!step3Input.value) {
+            if (!isNaN(moritzVal) && moritzVal > 0) {
+                step3Input.value = moritzVal;
+            } else if (!state.isMoritzFormat) {
+                step3Input.value = uniqueROs3.size;
+            }
+        }
+        var hint = state.isMoritzFormat
+            ? 'Summary invoice detected — verify or update this number.'
+            : 'Auto-filled from invoice (' + uniqueROs3.size + ' unique ROs). Edit if needed.';
+        document.getElementById('step3ROCountHint').textContent = hint;
+        var months2 = getInvoiceMonths();
         document.getElementById('rateContext').innerHTML =
-            roLabel + ' across <strong>' + months.length + '</strong> month(s): ' + months.join(', ');
+            'Period(s): <strong>' + months2.join(', ') + '</strong>';
     }
 }
 
@@ -1017,6 +1033,8 @@ function startOver() {
     document.getElementById('invoiceFile').value = '';
     document.getElementById('moritzROCountWrap').style.display = 'none';
     document.getElementById('moritzROCount').value = '';
+    document.getElementById('step3ROCount').value = '';
+    document.getElementById('step3ROCountHint').textContent = '';
     state.isMoritzFormat = false;
 
     goToStep(1);
@@ -1226,8 +1244,8 @@ function runAudit() {
     var matched = state.matchResults.matched;
     var unmatched = state.matchResults.unmatched;
     var uniqueROs = new Set(state.invoiceItems.map(function(i) { return i.roNumber; }));
-    var manualRO = state.isMoritzFormat ? parseInt(document.getElementById('moritzROCount').value, 10) : NaN;
-    var roCount = (!isNaN(manualRO) && manualRO > 0) ? manualRO : uniqueROs.size;
+    var step3RO = parseInt(document.getElementById('step3ROCount').value, 10);
+    var roCount = (!isNaN(step3RO) && step3RO > 0) ? step3RO : uniqueROs.size;
     var priceListTotal = matched.reduce(function(sum, m) { return sum + m.extendedPrice; }, 0);
     var perROTotal = roCount * rate;
     var difference = perROTotal - priceListTotal;
