@@ -324,21 +324,16 @@
     <div class="stepper" id="stepper">
         <div class="step-item active" data-step="1">
             <div class="step-circle">1</div>
-            <span class="step-label">Price List</span>
+            <span class="step-label">Supply Data</span>
         </div>
         <div class="step-line" data-after="1"></div>
         <div class="step-item" data-step="2">
             <div class="step-circle">2</div>
-            <span class="step-label">Units Sold</span>
+            <span class="step-label">Per-RO Rate</span>
         </div>
         <div class="step-line" data-after="2"></div>
         <div class="step-item" data-step="3">
             <div class="step-circle">3</div>
-            <span class="step-label">Per-RO Rate</span>
-        </div>
-        <div class="step-line" data-after="3"></div>
-        <div class="step-item" data-step="4">
-            <div class="step-circle">4</div>
             <span class="step-label">Results</span>
         </div>
     </div>
@@ -346,37 +341,11 @@
     <!-- Wizard Section -->
     <div id="wizardSection">
 
-        <!-- Step 1: Price List -->
+        <!-- Step 1: Supply Data -->
         <div class="step-panel active" id="step1">
             <div class="card">
-                <h2>Upload Price List</h2>
-                <p style="color:#666;font-size:0.9em;margin-bottom:16px;">Upload the master price list (CSV, XLSX, or XLS). The tool will look for columns like Description/Item and Price/Rate.</p>
-                <div class="drop-zone" id="priceListDropZone">
-                    <input type="file" id="priceListFile" accept=".csv,.xlsx,.xls" hidden>
-                    <div class="drop-zone-content">
-                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        <span>Drop price list file here or <a href="#" id="priceListBrowse">browse</a></span>
-                        <span class="drop-zone-formats">CSV, XLSX, XLS</span>
-                    </div>
-                </div>
-                <div id="priceListFeedback" style="display:none;"></div>
-                <div id="priceListPreview" style="display:none;" class="preview-section"></div>
-                <div class="step-actions">
-                    <div></div>
-                    <button class="btn-primary" id="step1Next" disabled onclick="goToStep(2)">Continue &rarr;</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 2: Units Sold -->
-        <div class="step-panel" id="step2">
-            <div class="card">
-                <h2>Upload Units Sold</h2>
-                <p style="color:#666;font-size:0.9em;margin-bottom:16px;">Upload a file with item descriptions and quantities sold for the period. Any CSV or Excel file with an item column and a quantity column will work.</p>
+                <h2>Upload Supply Data</h2>
+                <p style="color:#666;font-size:0.9em;margin-bottom:16px;">Upload the supply cost report for the period. The tool needs a description column and either a &ldquo;Value&rdquo; (extended cost) column or a &ldquo;Price&rdquo; (unit price) column.</p>
                 <div class="drop-zone" id="invoiceDropZone">
                     <input type="file" id="invoiceFile" accept=".csv,.xlsx,.xls" hidden>
                     <div class="drop-zone-content">
@@ -392,17 +361,17 @@
                 <div id="invoiceFeedback" style="display:none;"></div>
                 <div id="invoicePreview" style="display:none;" class="preview-section"></div>
                 <div class="step-actions">
-                    <button class="btn-secondary" onclick="goToStep(1)">&larr; Back</button>
-                    <button class="btn-primary" id="step2Next" disabled onclick="goToStep(3)">Continue &rarr;</button>
+                    <div></div>
+                    <button class="btn-primary" id="step1Next" disabled onclick="goToStep(2)">Continue &rarr;</button>
                 </div>
             </div>
         </div>
 
-        <!-- Step 3: Per-RO Rate -->
-        <div class="step-panel" id="step3">
+        <!-- Step 2: Per-RO Rate -->
+        <div class="step-panel" id="step2">
             <div class="card">
-                <h2>Enter Current Per-RO Rate</h2>
-                <p style="color:#666;font-size:0.9em;margin-bottom:20px;">Enter the rate the customer is currently paying per repair order.</p>
+                <h2>Enter Per-RO Rate &amp; RO Count</h2>
+                <p style="color:#666;font-size:0.9em;margin-bottom:20px;">Enter the rate the customer is currently paying per repair order, and the total number of ROs for the period.</p>
                 <div class="rate-section">
                     <div>
                         <label>Current Per-RO Rate:</label>
@@ -411,7 +380,6 @@
                             <input type="number" id="perRORate" value="" step="0.25" min="0" placeholder="0.00">
                             <span>/ RO</span>
                         </div>
-                        <div class="rate-context" id="rateContext"></div>
                     </div>
                     <div style="margin-top:18px;">
                         <label>RO Count for This Period:</label>
@@ -421,9 +389,10 @@
                         </div>
                         <div style="font-size:0.82em;color:#888;margin-top:4px;" id="step3ROCountHint"></div>
                     </div>
+                    <div id="rateContext" style="margin-top:14px; font-size:0.88em; color:#555;"></div>
                 </div>
                 <div class="step-actions">
-                    <button class="btn-secondary" onclick="goToStep(2)">&larr; Back</button>
+                    <button class="btn-secondary" onclick="goToStep(1)">&larr; Back</button>
                     <button class="btn-primary" id="runAuditBtn" onclick="runAudit()">Run Audit &rarr;</button>
                 </div>
             </div>
@@ -460,21 +429,6 @@
             <div id="topItemsContainer"></div>
         </div>
 
-        <div class="card" id="unmatchedCard" style="display:none;">
-            <div class="collapsible-header" onclick="toggleSection('unmatched')">
-                <h2 id="unmatchedTitle">Unmatched Invoice Items</h2>
-                <span class="toggle-icon" id="unmatchedToggle">&#9660;</span>
-            </div>
-            <div class="collapsible-body" id="unmatchedBody"></div>
-        </div>
-
-        <div class="card" id="matchDetailCard">
-            <div class="collapsible-header" onclick="toggleSection('matchDetail')">
-                <h2>Match Details</h2>
-                <span class="toggle-icon" id="matchDetailToggle">&#9660;</span>
-            </div>
-            <div class="collapsible-body" id="matchDetailBody"></div>
-        </div>
     </div>
 </div>
 
@@ -482,13 +436,10 @@
 // ===== STATE =====
 var state = {
     step: 1,
-    priceList: [],
-    priceListNorm: [],
-    priceListFile: '',
-    invoiceItems: [],
+    invoiceItems: [],   // { description, quantity, extendedPrice, unitPrice }
     invoiceFile: '',
     perRORate: 0,
-    matchResults: null,
+    auditCalc: null,
     currentView: 'monthly'
 };
 
@@ -581,393 +532,25 @@ function sortMonths(months) {
     });
 }
 
-// ===== COLUMN DETECTION =====
-var PRICE_LIST_PATTERNS = {
-    description: {
-        patterns: ['description','desc','item','itemdescription','itemname','name',
-                   'product','productname','service','servicename','partname',
-                   'partdescription','laborcode','opcode','part','labor'],
-        required: true
-    },
-    listPrice: {
-        patterns: ['price','listprice','retailprice','retail','unitprice','rate',
-                   'amount','charge','fee','msrp','sellprice','cost','alacarte',
-                   'saleprice','each','priceea','priceeach'],
-        required: true
-    },
-    itemId: {
-        patterns: ['id','itemid','sku','code','partno','partnumber','opcode',
-                   'itemcode','productcode','number','num','no'],
-        required: false
-    },
-    category: {
-        patterns: ['category','cat','type','group','department','dept','class'],
-        required: false
-    }
-};
-
-var INVOICE_PATTERNS = {
-    roNumber: {
-        patterns: ['ro','ronumber','ronum','repairorder','repairordernumber',
-                   'ordernumber','order','ordernum','ticket','ticketno',
-                   'invoiceno','invoice','invoicenumber','workorder','wo',
-                   'rono','orderno'],
-        required: true
-    },
-    description: {
-        patterns: ['description','desc','item','itemdescription','service',
-                   'laborname','linedesc','lineitem','partname','opcode',
-                   'name','product','part','labor'],
-        required: true
-    },
-    quantity: {
-        patterns: ['qty','quantity','units','count','unitssold','qtyshipped','amount'],
-        required: false
-    },
-    date: {
-        patterns: ['date','invoicedate','rodate','orderdate','servicedate',
-                   'closeddate','completeddate','month','period','closedate'],
-        required: false
-    }
-};
-
-function scoreMapping(headers, fieldPatterns) {
-    var mapping = {};
-    var score = 0;
-    var requiredMet = true;
-    var usedHeaders = new Set();
-
-    // Pass 1: exact canonical matches
-    for (var field in fieldPatterns) {
-        var config = fieldPatterns[field];
-        for (var h = 0; h < headers.length; h++) {
-            var header = headers[h];
-            if (usedHeaders.has(header)) continue;
-            var canon = canonicalize(header);
-            if (config.patterns.indexOf(canon) >= 0) {
-                mapping[field] = header;
-                usedHeaders.add(header);
-                score += 10;
-                break;
-            }
-        }
-    }
-
-    // Pass 2: substring matches
-    for (var field in fieldPatterns) {
-        if (mapping[field]) continue;
-        var config = fieldPatterns[field];
-        for (var h = 0; h < headers.length; h++) {
-            var header = headers[h];
-            if (usedHeaders.has(header)) continue;
-            var canon = canonicalize(header);
-            var match = config.patterns.some(function(p) { return canon.includes(p) || p.includes(canon); });
-            if (match) {
-                mapping[field] = header;
-                usedHeaders.add(header);
-                score += 5;
-                break;
-            }
-        }
-    }
-
-    for (var field in fieldPatterns) {
-        if (fieldPatterns[field].required && !mapping[field]) requiredMet = false;
-    }
-
-    return { mapping: mapping, score: score, requiredMet: requiredMet };
-}
-
-// ===== FUZZY MATCHING =====
-function normalizeForMatch(str) {
-    return String(str).toLowerCase().trim()
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-function tokenize(str) {
-    var stop = ['the','a','an','and','or','of','for','with','in','on','to','per','ea','each'];
-    return normalizeForMatch(str).split(' ').filter(function(t) {
-        return t.length > 0 && stop.indexOf(t) < 0;
-    });
-}
-
-function levenshtein(a, b) {
-    if (a.length === 0) return b.length;
-    if (b.length === 0) return a.length;
-    var matrix = [];
-    for (var i = 0; i <= b.length; i++) matrix[i] = [i];
-    for (var j = 0; j <= a.length; j++) matrix[0][j] = j;
-    for (var i = 1; i <= b.length; i++) {
-        for (var j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1,
-                    matrix[i][j - 1] + 1,
-                    matrix[i - 1][j] + 1
-                );
-            }
-        }
-    }
-    return matrix[b.length][a.length];
-}
-
-function scorePairMatch(invoiceDesc, priceDesc) {
-    var a = normalizeForMatch(invoiceDesc);
-    var b = normalizeForMatch(priceDesc);
-
-    // Pass 1: exact normalized match
-    if (a === b) return { score: 1.0, type: 'exact' };
-
-    // Pass 2: one contains the other
-    if (a.includes(b) || b.includes(a)) return { score: 0.92, type: 'fuzzy' };
-
-    // Pass 3: token containment
-    var tokA = tokenize(invoiceDesc);
-    var tokB = tokenize(priceDesc);
-    if (tokA.length > 0 && tokB.length > 0) {
-        var shorter = tokA.length <= tokB.length ? tokA : tokB;
-        var longer = tokA.length <= tokB.length ? tokB : tokA;
-        var contained = shorter.every(function(t) {
-            return longer.some(function(lt) { return lt.includes(t) || t.includes(lt); });
-        });
-        if (contained) return { score: 0.88, type: 'fuzzy' };
-
-        // Pass 4: Jaccard token similarity
-        var intersection = 0;
-        tokA.forEach(function(t) {
-            if (tokB.some(function(bt) { return bt === t || bt.includes(t) || t.includes(bt); })) {
-                intersection++;
-            }
-        });
-        var union = new Set(tokA.concat(tokB)).size;
-        var jaccard = intersection / union;
-        if (jaccard >= 0.5) return { score: jaccard * 0.85, type: 'fuzzy' };
-    }
-
-    // Pass 5: Levenshtein
-    var dist = levenshtein(a, b);
-    var maxLen = Math.max(a.length, b.length);
-    var sim = maxLen > 0 ? 1 - (dist / maxLen) : 0;
-    if (sim >= 0.7) return { score: sim * 0.8, type: 'fuzzy' };
-
-    return { score: sim * 0.5, type: 'none' };
-}
-
-function matchInvoicesToPriceList(invoiceItems, priceList, priceListNorm) {
-    // Group invoice items by unique description
-    var uniqueDescs = {};
-    invoiceItems.forEach(function(item) {
-        var key = normalizeForMatch(item.description);
-        if (!uniqueDescs[key]) uniqueDescs[key] = item.description;
-    });
-
-    // Build match lookup: invoiceNormDesc -> { priceListIndex, score, type }
-    var matchLookup = {};
-    var MATCH_THRESHOLD = 0.40;
-
-    Object.keys(uniqueDescs).forEach(function(normDesc) {
-        var bestScore = 0;
-        var bestIdx = -1;
-        var bestType = 'none';
-
-        for (var p = 0; p < priceList.length; p++) {
-            var result = scorePairMatch(uniqueDescs[normDesc], priceList[p].description);
-            if (result.score > bestScore) {
-                bestScore = result.score;
-                bestIdx = p;
-                bestType = result.type;
-            }
-        }
-
-        if (bestScore >= MATCH_THRESHOLD && bestIdx >= 0) {
-            matchLookup[normDesc] = {
-                priceListIndex: bestIdx,
-                score: bestScore,
-                type: bestType
-            };
-        }
-    });
-
-    // Apply matches
-    var matched = [];
-    var unmatched = [];
-
-    invoiceItems.forEach(function(item) {
-        var key = normalizeForMatch(item.description);
-        var match = matchLookup[key];
-        if (match) {
-            var plItem = priceList[match.priceListIndex];
-            matched.push({
-                invoiceDesc: item.description,
-                priceListDesc: plItem.description,
-                matchScore: match.score,
-                matchType: match.type,
-                quantity: item.quantity,
-                listPrice: plItem.listPrice,
-                extendedPrice: item.quantity * plItem.listPrice,
-                roNumber: item.roNumber,
-                month: item.month
-            });
-        } else {
-            unmatched.push({
-                description: item.description,
-                quantity: item.quantity,
-                roNumber: item.roNumber,
-                month: item.month
-            });
-        }
-    });
-
-    return { matched: matched, unmatched: unmatched };
-}
-
-// ===== FILE PARSING =====
-function parsePriceList(jsonRows, mapping) {
-    var parsed = [];
-    var errors = [];
-
-    jsonRows.forEach(function(row, i) {
-        var desc = String(row[mapping.description] || '').trim();
-        var priceRaw = row[mapping.listPrice];
-
-        if (!desc) return;
-
-        var price = parseNumber(priceRaw);
-        if (isNaN(price) || price <= 0) {
-            if (desc && priceRaw) errors.push('Row ' + (i + 2) + ': invalid price "' + priceRaw + '" for "' + desc + '"');
-            return;
-        }
-
-        parsed.push({
-            description: desc,
-            listPrice: price,
-            itemId: mapping.itemId ? String(row[mapping.itemId] || '').trim() : '',
-            category: mapping.category ? String(row[mapping.category] || '').trim() : ''
-        });
-    });
-
-    return { data: parsed, errors: errors };
-}
-
-function parseInvoices(jsonRows, mapping) {
-    var parsed = [];
-    var errors = [];
-
-    jsonRows.forEach(function(row, i) {
-        var roNum = String(row[mapping.roNumber] || '').trim();
-        var desc = String(row[mapping.description] || '').trim();
-
-        if (!desc && !roNum) return;
-        if (!desc) return;
-
-        var qty = mapping.quantity ? parseNumber(row[mapping.quantity]) : 1;
-        if (isNaN(qty) || qty === 0) qty = 1;
-
-        var dateVal = mapping.date ? row[mapping.date] : null;
-        var month = dateVal ? dateToMonth(dateVal) : 'Unknown';
-
-        parsed.push({
-            roNumber: roNum,
-            description: desc,
-            quantity: qty,
-            month: month
-        });
-    });
-
-    return { data: parsed, errors: errors };
-}
-
-// ===== MORITZ-FORMAT INVOICE PARSER =====
-// Handles the 2-row-header summary format:
-//   Row 0: meta/period row  (e.g. "Total | Mar 2026 | Mar 2026 | COGS")
-//   Row 1: column name row  (e.g. "Dealer | Description | Value | Quantity | Item Price | COGS")
-//   Row 2: TOTAL summary row — skip
-//   Row 3+: item rows
-
-function detectMoritzInvoiceFormat(sheet) {
-    // Read first 3 rows as raw arrays
-    var raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-    if (raw.length < 3) return null;
-
-    var row0 = raw[0];
-    var row1 = raw[1];
-
-    // Row 0 must contain a "Mon YYYY" period cell
-    var period = null;
-    var MONTH_RE = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s\-]+(\d{4})\b/i;
-    for (var c = 0; c < row0.length; c++) {
-        var m = MONTH_RE.exec(String(row0[c]));
-        if (m) {
-            var mon = m[1].charAt(0).toUpperCase() + m[1].slice(1, 3).toLowerCase();
-            period = mon + ' ' + m[2];
-            break;
-        }
-    }
-    if (!period) return null;
-
-    // Row 1 must contain "Description"
-    var descCol = -1, qtyCol = -1, itemCodeCol = 0, valueCol = -1, itemPriceCol = -1;
-    for (var c = 0; c < row1.length; c++) {
-        var v = String(row1[c]).trim().toLowerCase();
-        if (v === 'description')   descCol       = c;
-        else if (v === 'quantity') qtyCol        = c;
-        else if (v === 'value')    valueCol      = c;
-        else if (v === 'item price' || v === 'itemprice') itemPriceCol = c;
-    }
-    if (descCol < 0) return null;
-
-    return { period: period, descCol: descCol, qtyCol: qtyCol, itemCodeCol: itemCodeCol,
-             valueCol: valueCol, itemPriceCol: itemPriceCol, raw: raw };
-}
-
-function parseMoritzInvoice(fmt) {
-    var parsed = [];
-    // raw[0]=period header, raw[1]=col names, raw[2]=TOTAL row → start at index 3
-    for (var r = 3; r < fmt.raw.length; r++) {
-        var row = fmt.raw[r];
-        var itemCode = String(row[fmt.itemCodeCol] || '').trim();
-        var desc     = String(row[fmt.descCol]     || '').trim();
-        if (!desc) continue;
-
-        // Skip any stray TOTAL/subtotal rows (including "CPRO Total" footer)
-        if (/total/i.test(itemCode) || /^total$/i.test(desc)) continue;
-        // Skip rows where description looks like a raw number (not a product name)
-        if (/^\d+(\.\d+)?$/.test(desc)) continue;
-
-        var qty = fmt.qtyCol >= 0 ? parseNumber(row[fmt.qtyCol]) : 1;
-        if (isNaN(qty) || qty <= 0) qty = 1;
-
-        parsed.push({
-            roNumber:    itemCode || desc.substring(0, 20),
-            description: desc,
-            quantity:    qty,
-            month:       fmt.period
-        });
-    }
-    return { data: parsed, errors: [] };
+// ===== COLUMN DETECTION HELPER =====
+function canonicalize(header) {
+    return String(header).toLowerCase().trim().replace(/[^a-z0-9]/g, '');
 }
 
 // ===== WIZARD NAVIGATION =====
 function goToStep(stepNum) {
     state.step = stepNum;
-    for (var i = 1; i <= 3; i++) {
+    for (var i = 1; i <= 2; i++) {
         var panel = document.getElementById('step' + i);
         panel.classList.toggle('active', i === stepNum);
     }
     updateStepper();
 
-    if (stepNum === 3) {
-        var step3Input = document.getElementById('step3ROCount');
-        if (!step3Input.value) {
-            step3Input.value = '';
-        }
-        document.getElementById('step3ROCountHint').textContent = 'Enter the total number of repair orders for the period being audited.';
+    if (stepNum === 2) {
+        var supplyTotal = state.invoiceItems.reduce(function(s, i) { return s + i.extendedPrice; }, 0);
         document.getElementById('rateContext').innerHTML =
-            '<strong>' + state.invoiceItems.length + '</strong> items loaded from <strong>' + state.invoiceFile + '</strong>';
+            '<strong>' + state.invoiceItems.length + '</strong> items loaded &mdash; supply cost total: <strong>' + fmt(supplyTotal) + '</strong>';
+        document.getElementById('step3ROCountHint').textContent = 'Enter the total number of repair orders for this period.';
     }
 }
 
@@ -986,86 +569,28 @@ function updateStepper() {
 
 function startOver() {
     state = {
-        step: 1, priceList: [], priceListNorm: [], priceListFile: '',
-        invoiceItems: [], invoiceFile: '', perRORate: 0,
-        matchResults: null, currentView: 'monthly'
+        step: 1, invoiceItems: [], invoiceFile: '',
+        perRORate: 0, auditCalc: null, currentView: 'monthly'
     };
     document.getElementById('resultsSection').style.display = 'none';
     document.getElementById('wizardSection').style.display = 'block';
     document.getElementById('stepper').style.display = 'flex';
     document.getElementById('startOverBtn').style.display = 'none';
 
-    // Reset upload zones
-    ['priceListDropZone', 'invoiceDropZone'].forEach(function(id) {
-        var el = document.getElementById(id);
-        el.classList.remove('uploaded');
-    });
-    document.getElementById('priceListFeedback').style.display = 'none';
-    document.getElementById('priceListPreview').style.display = 'none';
+    document.getElementById('invoiceDropZone').classList.remove('uploaded');
     document.getElementById('invoiceFeedback').style.display = 'none';
     document.getElementById('invoicePreview').style.display = 'none';
     document.getElementById('step1Next').disabled = true;
-    document.getElementById('step2Next').disabled = true;
     document.getElementById('perRORate').value = '';
-    document.getElementById('priceListFile').value = '';
     document.getElementById('invoiceFile').value = '';
     document.getElementById('step3ROCount').value = '';
     document.getElementById('step3ROCountHint').textContent = '';
+    document.getElementById('rateContext').innerHTML = '';
 
     goToStep(1);
 }
 
-function getInvoiceMonths() {
-    var months = [...new Set(state.invoiceItems.map(function(i) { return i.month; }))];
-    return sortMonths(months);
-}
-
-// ===== FILE UPLOAD HANDLERS =====
-function handlePriceListFile(file) {
-    if (!file) return;
-    readAndParseFile(file, function(workbook) {
-        var sheet = workbook.Sheets[workbook.SheetNames[0]];
-        var json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        if (json.length === 0) {
-            showUploadFeedback('priceListFeedback', 'error', 'File appears to be empty.');
-            return;
-        }
-
-        var headers = Object.keys(json[0]);
-        var result = scoreMapping(headers, PRICE_LIST_PATTERNS);
-
-        if (!result.requiredMet) {
-            showUploadFeedback('priceListFeedback', 'error',
-                'Could not find required columns (Description and Price).<br>' +
-                'Found columns: ' + headers.map(function(h) { return '"' + h + '"'; }).join(', '));
-            return;
-        }
-
-        var parsed = parsePriceList(json, result.mapping);
-        if (parsed.data.length === 0) {
-            showUploadFeedback('priceListFeedback', 'error', 'No valid rows found with descriptions and prices.');
-            return;
-        }
-
-        state.priceList = parsed.data;
-        state.priceListNorm = parsed.data.map(function(item) { return normalizeForMatch(item.description); });
-        state.priceListFile = file.name;
-
-        var html = '<strong>' + file.name + '</strong> &mdash; ' + parsed.data.length + ' items loaded';
-        html += buildMappingHtml(result.mapping, PRICE_LIST_PATTERNS);
-        if (parsed.errors.length > 0) {
-            html += '<br><span style="color:#92400e;">' + parsed.errors.length + ' rows skipped (invalid data)</span>';
-        }
-        showUploadFeedback('priceListFeedback', 'success', html);
-
-        // Preview
-        showPreviewTable('priceListPreview', parsed.data.slice(0, 8), ['description', 'listPrice'], ['Description', 'List Price']);
-
-        document.getElementById('priceListDropZone').classList.add('uploaded');
-        document.getElementById('step1Next').disabled = false;
-    });
-}
-
+// ===== FILE UPLOAD HANDLER =====
 function handleInvoiceFile(file) {
     if (!file) return;
     readAndParseFile(file, function(workbook) {
@@ -1077,31 +602,35 @@ function handleInvoiceFile(file) {
             return;
         }
 
-        // Find first row with at least 2 non-empty cells — treat as header
-        var headerRowIdx = 0;
+        // Find the header row: the row (in first 6) with the most recognizable column name tokens
+        var KNOWN_HDR = /^(description|desc|item|qty|quantity|value|price|cost|units?|count|sold|amount|extended|product|name|service|part|itemprice|unitprice|itemsprice)$/i;
+        var bestScore = -1, headerRowIdx = 0;
         for (var i = 0; i < Math.min(6, raw.length); i++) {
-            if (raw[i].filter(function(c) { return String(c).trim() !== ''; }).length >= 2) {
-                headerRowIdx = i;
-                break;
-            }
+            var score = raw[i].filter(function(c) {
+                return KNOWN_HDR.test(canonicalize(String(c)));
+            }).length;
+            if (score > bestScore) { bestScore = score; headerRowIdx = i; }
         }
 
         var headers = raw[headerRowIdx].map(function(h) { return String(h).trim(); });
 
-        // Detect description and quantity columns by header name
-        var descCol = -1, qtyCol = -1;
-        var DESC_RE = /desc|item|product|name|service|part|code/i;
-        var QTY_RE  = /qty|quant|unit|count|sold|amount/i;
+        // Detect columns
+        var descCol = -1, qtyCol = -1, valueCol = -1, priceCol = -1;
         for (var c = 0; c < headers.length; c++) {
-            if (descCol < 0 && DESC_RE.test(headers[c])) descCol = c;
-            if (qtyCol  < 0 && QTY_RE.test(headers[c]))  qtyCol  = c;
+            var hc = canonicalize(headers[c]);
+            if (descCol  < 0 && /desc|item|product|name|service|part/.test(hc))      descCol  = c;
+            if (qtyCol   < 0 && /^qty$|quant|^units?$|^count$|^sold$/.test(hc))      qtyCol   = c;
+            if (valueCol < 0 && /^value$|^extended$|^ext$/.test(hc))                 valueCol = c;
+            if (priceCol < 0 && /price|^cost$|^rate$|^each$/.test(hc) && c !== descCol) priceCol = c;
         }
-        // Fallback: first two non-empty header columns
-        if (descCol < 0) {
-            for (var c = 0; c < headers.length; c++) { if (headers[c]) { descCol = c; break; } }
-        }
-        if (qtyCol < 0) {
-            for (var c = 0; c < headers.length; c++) { if (c !== descCol && headers[c]) { qtyCol = c; break; } }
+        if (descCol < 0) descCol = 0; // last-resort fallback
+
+        // Need at least a description and one pricing column
+        if (valueCol < 0 && priceCol < 0) {
+            showUploadFeedback('invoiceFeedback', 'error',
+                'Could not find a price or value column. The file needs a &ldquo;Value&rdquo; (extended cost) or &ldquo;Price&rdquo; (unit price) column.<br>' +
+                'Columns found: ' + headers.filter(Boolean).map(function(h) { return '&ldquo;' + h + '&rdquo;'; }).join(', '));
+            return;
         }
 
         // Parse data rows
@@ -1110,30 +639,50 @@ function handleInvoiceFile(file) {
             var row = raw[r];
             var desc = String(row[descCol] || '').trim();
             if (!desc) continue;
-            if (/total/i.test(desc)) continue;          // skip summary/total rows
-            var qty = parseNumber(row[qtyCol]);
+            // Skip total/summary rows
+            if (/^total/i.test(desc) || /^total/i.test(String(row[0] || ''))) continue;
+
+            var qty = qtyCol >= 0 ? parseNumber(row[qtyCol]) : 1;
             if (isNaN(qty) || qty <= 0) qty = 1;
-            items.push({ roNumber: '', description: desc, quantity: qty, month: 'Current Period' });
+
+            var extendedPrice;
+            if (valueCol >= 0 && parseNumber(row[valueCol]) > 0) {
+                extendedPrice = parseNumber(row[valueCol]);
+            } else if (priceCol >= 0) {
+                var unitPrice = parseNumber(row[priceCol]);
+                extendedPrice = qty * unitPrice;
+            } else {
+                continue;
+            }
+            if (!(extendedPrice > 0)) continue;
+
+            items.push({
+                description: desc,
+                quantity: qty,
+                extendedPrice: extendedPrice,
+                unitPrice: extendedPrice / qty
+            });
         }
 
         if (items.length === 0) {
-            showUploadFeedback('invoiceFeedback', 'error', 'No valid rows found. Check that the file has item and quantity columns.');
+            showUploadFeedback('invoiceFeedback', 'error', 'No valid rows with pricing found. Check that the file has item and value/price columns.');
             return;
         }
 
         state.invoiceItems = items;
         state.invoiceFile  = file.name;
 
-        var html = '<strong>' + file.name + '</strong> &mdash; ' + items.length + ' items loaded';
-        html += ' <span style="color:#666;font-size:0.9em;">(detected columns: &ldquo;' +
-                headers[descCol] + '&rdquo; &amp; &ldquo;' + headers[qtyCol] + '&rdquo;)</span>';
+        var supplyTotal = items.reduce(function(s, i) { return s + i.extendedPrice; }, 0);
+        var pricingSrc  = valueCol >= 0 ? '&ldquo;' + headers[valueCol] + '&rdquo; column' : '&ldquo;' + headers[priceCol] + '&rdquo; &times; qty';
+        var html = '<strong>' + file.name + '</strong> &mdash; ' + items.length + ' items &mdash; supply total: <strong>' + fmt(supplyTotal) + '</strong>';
+        html += ' <span style="color:#666;font-size:0.9em;">(pricing from ' + pricingSrc + ')</span>';
         showUploadFeedback('invoiceFeedback', 'success', html);
 
         showPreviewTable('invoicePreview', items.slice(0, 8),
-            ['description', 'quantity'], ['Item', 'Qty']);
+            ['description', 'quantity', 'extendedPrice'], ['Item', 'Qty', 'Cost']);
 
         document.getElementById('invoiceDropZone').classList.add('uploaded');
-        document.getElementById('step2Next').disabled = false;
+        document.getElementById('step1Next').disabled = false;
     });
 }
 
@@ -1200,39 +749,32 @@ function runAudit() {
         alert('Please enter a valid Per-RO rate greater than zero.');
         return;
     }
+    var step3RO = parseInt(document.getElementById('step3ROCount').value, 10);
+    if (isNaN(step3RO) || step3RO <= 0) {
+        alert('Please enter the RO count for this period.');
+        return;
+    }
+
     state.perRORate = rate;
 
-    // Match invoice items to price list
-    state.matchResults = matchInvoicesToPriceList(state.invoiceItems, state.priceList, state.priceListNorm);
-
-    // Calculate results
-    var matched = state.matchResults.matched;
-    var unmatched = state.matchResults.unmatched;
-    var uniqueROs = new Set(state.invoiceItems.map(function(i) { return i.roNumber; }));
-    var step3RO = parseInt(document.getElementById('step3ROCount').value, 10);
-    var roCount = (!isNaN(step3RO) && step3RO > 0) ? step3RO : uniqueROs.size;
-    var priceListTotal = matched.reduce(function(sum, m) { return sum + m.extendedPrice; }, 0);
-    var perROTotal = roCount * rate;
-    var difference = perROTotal - priceListTotal;
+    var supplyTotal = state.invoiceItems.reduce(function(s, i) { return s + i.extendedPrice; }, 0);
+    var perROTotal  = step3RO * rate;
+    var difference  = perROTotal - supplyTotal;
 
     state.auditCalc = {
-        roCount: roCount,
-        priceListTotal: priceListTotal,
-        perROTotal: perROTotal,
-        difference: difference,
-        matchedCount: matched.length,
-        unmatchedCount: unmatched.length,
-        totalItems: state.invoiceItems.length,
-        matchRate: state.invoiceItems.length > 0 ? (matched.length / state.invoiceItems.length * 100) : 0
+        roCount:       step3RO,
+        supplyTotal:   supplyTotal,
+        perROTotal:    perROTotal,
+        difference:    difference,
+        totalItems:    state.invoiceItems.length
     };
 
-    // Show results
     document.getElementById('wizardSection').style.display = 'none';
     document.getElementById('stepper').style.display = 'none';
     document.getElementById('resultsSection').style.display = 'block';
     document.getElementById('startOverBtn').style.display = 'flex';
 
-    state.step = 4;
+    state.step = 3;
     renderResults();
 }
 
@@ -1243,8 +785,6 @@ function renderResults() {
     renderBreakdownTable();
     renderChart();
     renderTopItems();
-    renderUnmatched();
-    renderMatchDetail();
 }
 
 function renderVerdict() {
@@ -1258,17 +798,17 @@ function renderVerdict() {
         html += '<div class="verdict-content">';
         html += '<div class="verdict-title">Customer Overpaid &mdash; Refund Due</div>';
         html += '<div class="verdict-amount">' + fmt(calc.difference) + '</div>';
-        html += '<div class="verdict-detail">The customer paid ' + fmt(calc.perROTotal) + ' on the Per-RO program but would have paid ' + fmt(calc.priceListTotal) + ' at price list rates (' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '/RO).</div>';
+        html += '<div class="verdict-detail">The customer paid ' + fmt(calc.perROTotal) + ' on the Per-RO program but actual supply cost was ' + fmt(calc.supplyTotal) + ' (' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '/RO).</div>';
         html += '</div></div>';
     } else if (calc.difference < 0) {
         // Customer underpaid
-        var recommendedRate = calc.priceListTotal / calc.roCount;
+        var recommendedRate = calc.supplyTotal / calc.roCount;
         html += '<div class="verdict-banner underpaid">';
         html += '<div class="verdict-icon">&#9888;&#65039;</div>';
         html += '<div class="verdict-content">';
         html += '<div class="verdict-title">Customer Underpaid &mdash; Rate Adjustment Needed</div>';
         html += '<div class="verdict-amount">Shortfall: ' + fmt(Math.abs(calc.difference)) + '</div>';
-        html += '<div class="verdict-detail">The customer paid ' + fmt(calc.perROTotal) + ' on the Per-RO program but would have paid ' + fmt(calc.priceListTotal) + ' at price list rates (' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '/RO).</div>';
+        html += '<div class="verdict-detail">The customer paid ' + fmt(calc.perROTotal) + ' on the Per-RO program but actual supply cost was ' + fmt(calc.supplyTotal) + ' (' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '/RO).</div>';
         html += '<div class="recommendation-box">';
         html += '<div class="rec-label">Recommended New Per-RO Rate</div>';
         html += '<div class="rec-value">' + fmt(recommendedRate) + ' / RO</div>';
@@ -1280,7 +820,7 @@ function renderVerdict() {
         html += '<div class="verdict-content">';
         html += '<div class="verdict-title">Pricing is Balanced</div>';
         html += '<div class="verdict-amount">' + fmt(0) + '</div>';
-        html += '<div class="verdict-detail">The Per-RO charges exactly match what the customer would have paid at price list rates.</div>';
+        html += '<div class="verdict-detail">The Per-RO charges exactly match the actual supply cost.</div>';
         html += '</div></div>';
     }
 
@@ -1293,25 +833,21 @@ function renderSummaryCards() {
     var diffLabel = calc.difference > 0 ? 'Overpaid (refund due)' : calc.difference < 0 ? 'Underpaid (rate increase needed)' : 'Balanced';
 
     var html = '';
-    html += '<div class="summary-card sc-blue"><div class="sc-label">Price List Total</div><div class="sc-value">' + fmt(calc.priceListTotal) + '</div><div class="sc-sub">' + calc.matchedCount + ' matched items</div></div>';
+    html += '<div class="summary-card sc-blue"><div class="sc-label">Supply Cost Total</div><div class="sc-value">' + fmt(calc.supplyTotal) + '</div><div class="sc-sub">' + calc.totalItems + ' line items</div></div>';
     html += '<div class="summary-card sc-green"><div class="sc-label">Per-RO Total</div><div class="sc-value">' + fmt(calc.perROTotal) + '</div><div class="sc-sub">' + calc.roCount + ' ROs &times; ' + fmt(state.perRORate) + '</div></div>';
     html += '<div class="summary-card ' + diffClass + '"><div class="sc-label">Difference</div><div class="sc-value">' + fmtSigned(calc.difference) + '</div><div class="sc-sub">' + diffLabel + '</div></div>';
-    html += '<div class="summary-card sc-amber"><div class="sc-label">Match Rate</div><div class="sc-value">' + calc.matchRate.toFixed(1) + '%</div><div class="sc-sub">' + calc.matchedCount + ' of ' + calc.totalItems + ' items matched</div></div>';
 
     document.getElementById('summaryCards').innerHTML = html;
 }
 
 function getMonthlyBreakdown() {
-    var matched = state.matchResults.matched;
-    var roCount = state.auditCalc.roCount;
-    var plTotal = matched.reduce(function(s, m) { return s + m.extendedPrice; }, 0);
-    var perROTotal = roCount * state.perRORate;
+    var calc = state.auditCalc;
     return [{
         period: 'Current Period',
-        roCount: roCount,
-        priceListTotal: plTotal,
-        perROTotal: perROTotal,
-        difference: perROTotal - plTotal
+        roCount: calc.roCount,
+        priceListTotal: calc.supplyTotal,
+        perROTotal: calc.perROTotal,
+        difference: calc.difference
     }];
 }
 
@@ -1403,120 +939,25 @@ function renderChart() {
 }
 
 function renderTopItems() {
-    var matched = state.matchResults.matched;
-    if (!matched.length) {
-        document.getElementById('topItemsContainer').innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No matched items.</p>';
+    var items = state.invoiceItems;
+    if (!items.length) {
+        document.getElementById('topItemsContainer').innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No items.</p>';
         return;
     }
 
-    var agg = {};
-    matched.forEach(function(m) {
-        var key = m.priceListDesc;
-        if (!agg[key]) agg[key] = { desc: key, total: 0, qty: 0 };
-        agg[key].total += m.extendedPrice;
-        agg[key].qty += m.quantity;
-    });
-
-    var sorted = Object.values(agg).sort(function(a, b) { return b.total - a.total; }).slice(0, 15);
-    if (sorted.length === 0) return;
-
-    var maxVal = sorted[0].total;
+    var sorted = items.slice().sort(function(a, b) { return b.extendedPrice - a.extendedPrice; }).slice(0, 15);
+    var maxVal = sorted[0].extendedPrice;
     var html = '';
     sorted.forEach(function(item, i) {
-        var pct = maxVal > 0 ? (item.total / maxVal) * 100 : 0;
+        var pct = maxVal > 0 ? (item.extendedPrice / maxVal) * 100 : 0;
         html += '<div class="item-bar-row">';
         html += '<div class="item-rank">' + (i + 1) + '</div>';
-        html += '<div class="item-name" title="' + item.desc + '">' + item.desc + '</div>';
+        html += '<div class="item-name" title="' + item.description + '">' + item.description + '</div>';
         html += '<div class="item-bar-container"><div class="item-bar-fill" style="width:' + pct + '%"></div></div>';
-        html += '<div class="item-cost">' + fmt(item.total) + '</div>';
+        html += '<div class="item-cost">' + fmt(item.extendedPrice) + '</div>';
         html += '</div>';
     });
     document.getElementById('topItemsContainer').innerHTML = html;
-}
-
-function renderUnmatched() {
-    var unmatched = state.matchResults.unmatched;
-    var card = document.getElementById('unmatchedCard');
-
-    if (unmatched.length === 0) {
-        card.style.display = 'none';
-        return;
-    }
-    card.style.display = 'block';
-
-    var pct = (unmatched.length / state.invoiceItems.length * 100).toFixed(1);
-    document.getElementById('unmatchedTitle').textContent = 'Unmatched Invoice Items (' + unmatched.length + ')';
-
-    var html = '<div class="unmatched-warning"><strong>Warning:</strong> ' + unmatched.length + ' items (' + pct + '% of total) could not be matched to the price list and are <strong>NOT included</strong> in the Price List Total. Review for accuracy.</div>';
-
-    html += '<div class="preview-table-wrap" style="max-height:400px;"><table class="preview-table"><thead><tr><th>Description</th><th>Qty</th><th>RO #</th><th>Month</th></tr></thead><tbody>';
-
-    // Aggregate unmatched by description
-    var aggUnmatched = {};
-    unmatched.forEach(function(u) {
-        var key = normalizeForMatch(u.description);
-        if (!aggUnmatched[key]) aggUnmatched[key] = { description: u.description, qty: 0, roCount: 0, ros: new Set() };
-        aggUnmatched[key].qty += u.quantity;
-        aggUnmatched[key].ros.add(u.roNumber);
-    });
-
-    var sortedUnmatched = Object.values(aggUnmatched).sort(function(a, b) { return b.qty - a.qty; });
-    sortedUnmatched.forEach(function(u) {
-        html += '<tr><td>' + u.description + '</td><td>' + u.qty + '</td><td>' + u.ros.size + ' ROs</td><td></td></tr>';
-    });
-
-    html += '</tbody></table></div>';
-    document.getElementById('unmatchedBody').innerHTML = html;
-    document.getElementById('unmatchedBody').classList.add('open');
-}
-
-function renderMatchDetail() {
-    var matched = state.matchResults.matched;
-    if (!matched.length) {
-        document.getElementById('matchDetailCard').style.display = 'none';
-        return;
-    }
-
-    // Aggregate by unique invoice desc -> price list desc mapping
-    var agg = {};
-    matched.forEach(function(m) {
-        var key = normalizeForMatch(m.invoiceDesc) + '||' + normalizeForMatch(m.priceListDesc);
-        if (!agg[key]) {
-            agg[key] = {
-                invoiceDesc: m.invoiceDesc,
-                priceListDesc: m.priceListDesc,
-                matchScore: m.matchScore,
-                matchType: m.matchType,
-                qty: 0,
-                listPrice: m.listPrice,
-                total: 0
-            };
-        }
-        agg[key].qty += m.quantity;
-        agg[key].total += m.extendedPrice;
-    });
-
-    var sorted = Object.values(agg).sort(function(a, b) { return b.total - a.total; });
-
-    var html = '<div class="preview-table-wrap" style="max-height:500px;"><table class="preview-table"><thead><tr>';
-    html += '<th>Invoice Item</th><th>Matched Price List Item</th><th>Match</th><th>Qty</th><th>List Price</th><th>Extended</th>';
-    html += '</tr></thead><tbody>';
-
-    sorted.forEach(function(m) {
-        var badgeClass = m.matchScore >= 0.9 ? 'exact' : m.matchScore >= 0.6 ? 'fuzzy' : 'low';
-        var badgeText = m.matchScore >= 0.9 ? 'Exact' : m.matchScore >= 0.6 ? 'Fuzzy' : 'Low';
-        html += '<tr>';
-        html += '<td>' + m.invoiceDesc + '</td>';
-        html += '<td>' + m.priceListDesc + '</td>';
-        html += '<td><span class="match-badge ' + badgeClass + '">' + badgeText + ' ' + (m.matchScore * 100).toFixed(0) + '%</span></td>';
-        html += '<td style="text-align:right">' + m.qty + '</td>';
-        html += '<td style="text-align:right">' + fmt(m.listPrice) + '</td>';
-        html += '<td style="text-align:right">' + fmt(m.total) + '</td>';
-        html += '</tr>';
-    });
-
-    html += '</tbody></table></div>';
-    document.getElementById('matchDetailBody').innerHTML = html;
 }
 
 function setView(view, btn) {
@@ -1564,7 +1005,6 @@ function wireDropZone(zoneId, fileInputId, browseId, handler) {
     });
 }
 
-wireDropZone('priceListDropZone', 'priceListFile', 'priceListBrowse', handlePriceListFile);
 wireDropZone('invoiceDropZone', 'invoiceFile', 'invoiceBrowse', handleInvoiceFile);
 </script>
 </body>
